@@ -280,13 +280,13 @@ source ~/.bashrc
 a. 使用 HTTPS 克隆： 
 
   ```bash
-  git clone https://github.com/JakaCobot/jaka_ros2.git
+  git clone https://github.com/JAKARobotics/jaka_ros2.git
   ```
 
 b. 使用 SSH 克隆： 
 
   ```bash
-  git clone git@github.com:JakaCobot/jaka_ros2.git
+  git clone git@github.com:JAKARobotics/jaka_ros2.git
   ```
 
 - 从官方来源下载最新发布版本并解压软件包。  
@@ -303,13 +303,13 @@ colcon build --symlink-install
 构建完成后，需对环境进行设置以使用该软件包： 
 
 ```bash
-source ~/jaka_ros2/install/setup.bash
+source <path-to-where-the-repository-is-cloned-or-extracted>/jaka_ros2/install/setup.bash
 ```
 
 如果希望在每次打开终端时自动加载：
 
 ```bash
-echo "source ~/jaka_ros2/install/setup.bash" >> ~/.bashrc
+echo "source <path-to-where-the-repository-is-cloned-or-extracted>/jaka_ros2/install/setup.bash" >> ~/.bashrc
 source ~/.bashrc
 ```
 
@@ -808,7 +808,7 @@ Gazebo 是一个强大的仿真环境，提供逼真的物理和可视化效果�
 要启动 MoveIt 2 服务器，请打开一个终端并执行以下命令，将 `<robot_ip>` 替换为机器人的实际 IP 地址，将 `<robot_model>` 替换为您正在使用的 JAKA 机器人型号（例如，`zu3`、`s5`、`a12`、`minicobo` 等）：
 
 ```bash
-ros2 launch jaka_planner moveit_server.launch.py robot_ip:=<robot_ip> robot_model:=<robot_model>
+ros2 launch jaka_planner moveit_server.launch.py ip:=<robot_ip> model:=<robot_model>
 ```
 
 <figure id="figure-4-19">

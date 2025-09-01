@@ -365,11 +365,11 @@ To obtain the **JAKA ROS 2 package**, you can either:
 - Clone the repository from GitHub:  
     a. Clone with HTTPS:  
     ```bash
-    git clone https://github.com/JakaCobot/jaka_ros2.git
+    git clone https://github.com/JAKARobotics/jaka_ros2.git
     ```
     b. Clone with SSH:
     ```bash
-    git clone git@github.com:JakaCobot/jaka_ros2.git
+    git clone git@github.com:JAKARobotics/jaka_ros2.git
     ```
 
 - Download the latest release from the official source and extract the package.  
@@ -384,12 +384,12 @@ colcon build --symlink-install
 **3) Terminal Environment Setup**  
 After building the workspace, source it to use the package:  
 ```bash
-source ~/jaka_ros2/install/setup.bash
+source <path-to-where-the-repository-is-cloned-or-extracted>/jaka_ros2/install/setup.bash
 ```
 
 To automatically source it every time a terminal is opened:
 ```bash
-echo "source ~/jaka_ros2/install/setup.bash" >> ~/.bashrc
+echo "source <path-to-where-the-repository-is-cloned-or-extracted>/jaka_ros2/install/setup.bash" >> ~/.bashrc
 source ~/.bashrc
 ```
 
@@ -873,7 +873,7 @@ Before launching the `jaka_planner` MoveIt 2 server, ensure that the `jaka_drive
 #### Starting the MoveIt 2 Server
 To launch the MoveIt 2 server, open a terminal and execute the following command, replacing `<robot_ip>` with the actual IP address of the robot and `<robot_model>` with the corresponding JAKA robot model you’re working with (e.g., `zu3`, `s5`, `a12`, `minicobo`, etc.):
 ```bash
-ros2 launch jaka_planner moveit_server.launch.py robot_ip:=<robot_ip> robot_model:=<robot_model>
+ros2 launch jaka_planner moveit_server.launch.py ip:=<robot_ip> model:=<robot_model>
 ```
 
 <figure id="figure-4-19">

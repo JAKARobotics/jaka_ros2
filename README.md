@@ -11,23 +11,23 @@ Before installing and building the **jaka_ros2** package, ensure that your syste
 
 #### a. Clone with HTTPS:
 ```bash
-git clone https://github.com/JakaCobot/jaka_ros2.git
+git clone https://github.com/JAKARobotics/jaka_ros2.git
 ```
 
 #### b. Clone with SSH:
 ```bash
-git clone git@github.com:JakaCobot/jaka_ros2.git
+git clone git@github.com:JAKARobotics/jaka_ros2.git
 ```
 
 ### 2. Build the packages
 ```bash
-cd <path-to-where-the-repository-is-cloned>/jaka_ros2/src
-colcon build
+cd <path-to-where-the-repository-is-cloned>/jaka_ros2
+colcon build --symlink-install
 ```
 
 ### 3. Setup the terminal environment
 ```bash
-echo "source <path-to-where-the-repository-is-cloned>/jaka_ros2/install/setup.sh" >> ~/.bashrc
+echo "source <path-to-where-the-repository-is-cloned>/jaka_ros2/install/setup.bash" >> ~/.bashrc
 source ~/.bashrc
 ```
 
