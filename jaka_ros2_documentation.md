@@ -1021,7 +1021,7 @@ ros2 run jaka_planner moveit_test --ros-args -p model:=<robot_model>
 **2) Running moveit_test on Demo Gazebo Simulation with RViz:**  
 Run the following commands in separate terminals:  
 ```bash
-ros2 launch jaka_<robot_model>_moveit_config gazebo.launch.py
+ros2 launch jaka_<robot_model>_moveit_config demo_gazebo.launch.py
 ros2 run jaka_planner moveit_test --ros-args -p model:=<robot_model>
 ```  
 

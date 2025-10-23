@@ -945,7 +945,7 @@ ros2 run jaka_planner moveit_test --ros-args -p model:=<robot_model>
 在不同的终端中运行以下命令：
 
 ```bash
-ros2 launch jaka_<robot_model>_moveit_config gazebo.launch.py use_rviz_sim:=true
+ros2 launch jaka_<robot_model>_moveit_config gazebo.launch.py 
 ros2 run jaka_planner moveit_test --ros-args -p model:=<robot_model>
 ```  
 
@@ -962,7 +962,7 @@ ros2 run jaka_planner moveit_test --ros-args -p model:=<robot_model>
 在不同的终端中运行以下命令：
 
 ```bash
-ros2 launch jaka_<robot_model>_moveit_config demo_gazebo.launch.py use_rviz_sim:=true
+ros2 launch jaka_<robot_model>_moveit_config demo_gazebo.launch.py 
 ros2 run jaka_planner moveit_test --ros-args -p model:=<robot_model>
 ```  
 

@@ -35,7 +35,7 @@ source ~/.bashrc
 ## Start the JAKA Driver Server and Call Functional Services
 ### 1. Start the `jaka_driver` server passing the `<robot_ip>` parameter via the ros2 launch command
 ```bash
-ros2 launch jaka_driver robot_start_launch.py ip:=<robot_ip>
+ros2 launch jaka_driver robot_start.launch.py ip:=<robot_ip>
 ```
 
 ### 2. Call various functional services with parameters through ros2 service call
