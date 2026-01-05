@@ -26,8 +26,11 @@ from moveit_configs_utils.launch_utils import (
 
 from ament_index_python.packages import get_package_share_directory
 from moveit_configs_utils.moveit_configs_builder import MoveItConfigsBuilder
-from launch.event_handlers import OnProcessExit
+from launch.event_handlers import OnProcessStart
 
+def _use_sim_time_cfg(default="false"):
+    # Robust even if parent forgot to declare it
+    return LaunchConfiguration("use_sim_time", default=default)
 
 def generate_rsp_launch(moveit_config):
     """Launch file for robot state publisher (rsp)"""
@@ -45,6 +48,7 @@ def generate_rsp_launch(moveit_config):
             moveit_config.robot_description,
             {
                 "publish_frequency": LaunchConfiguration("publish_frequency"),
+                "use_sim_time": ParameterValue(_use_sim_time_cfg("false"), value_type=bool),
             },
         ],
     )
@@ -69,6 +73,7 @@ def generate_moveit_rviz_launch(moveit_config):
         moveit_config.planning_pipelines,
         moveit_config.robot_description_kinematics,
         moveit_config.joint_limits,
+        {"use_sim_time": ParameterValue(_use_sim_time_cfg("false"), value_type=bool)},
     ]
 
     add_debuggable_node(
@@ -225,11 +230,11 @@ def generate_move_group_launch(moveit_config):
     # default to false, because almost nothing in move_group relies on this information
     ld.add_action(DeclareBooleanLaunchArg("monitor_dynamics", default_value=False))
 
-    ld.add_action(
-        DeclareLaunchArgument(
-            "use_sim_time", default_value="true", description="Use simulation time"
-        )
-    )
+    # ld.add_action(
+    #     DeclareLaunchArgument(
+    #         "use_sim_time", default_value="false", description="Use simulation time"
+    #     )
+    # )
 
     should_publish = LaunchConfiguration("publish_monitored_planning_scene")
 
@@ -254,7 +259,7 @@ def generate_move_group_launch(moveit_config):
     move_group_params = [
         moveit_config.to_dict(),
         move_group_configuration,
-        {"use_sim_time": True},
+        {"use_sim_time": ParameterValue(_use_sim_time_cfg("false"), value_type=bool)},
     ]
 
     add_debuggable_node(
@@ -295,7 +300,7 @@ def generate_demo_launch(moveit_config, launch_package_path=None):
        DeclareBooleanLaunchArg(
            "use_rviz_sim",
            default_value=False,
-           description="Set to True to use Rviz simulation mode, False for real robot",
+           description="Set to True to use Rviz simulation mode",
        )
     )
     ld.add_action(
@@ -304,11 +309,29 @@ def generate_demo_launch(moveit_config, launch_package_path=None):
            msg="Rviz simulation mode is enabled"
        )
     )
-
     ld.add_action(
        LogInfo(
            condition=UnlessCondition(LaunchConfiguration("use_rviz_sim")),
            msg="Rviz simulation mode is disabled"
+       )
+    )
+    ld.add_action(
+       DeclareBooleanLaunchArg(
+           "use_isaac_sim",
+           default_value=False,
+           description="Set to True to use Isaac simulation",
+       )
+    )
+    ld.add_action(
+       LogInfo(
+           condition=IfCondition(LaunchConfiguration("use_isaac_sim")),
+           msg="Isaac simulation is enabled"
+       )
+    )
+    ld.add_action(
+       LogInfo(
+           condition=UnlessCondition(LaunchConfiguration("use_isaac_sim")),
+           msg="Isaac simulation is disabled"
        )
     )
     ld.add_action(
@@ -326,6 +349,7 @@ def generate_demo_launch(moveit_config, launch_package_path=None):
         )
     )
     ld.add_action(DeclareBooleanLaunchArg("use_rviz", default_value=True))
+    ld.add_action(DeclareLaunchArgument("use_sim_time", default_value="false"))
 
     moveit_config = (
         MoveItConfigsBuilder(
@@ -335,6 +359,7 @@ def generate_demo_launch(moveit_config, launch_package_path=None):
         .robot_description(
             mappings={
                 "use_rviz_sim": LaunchConfiguration("use_rviz_sim"), # Ensure RViz simulation is mode enabled
+                "use_isaac_sim": LaunchConfiguration("use_isaac_sim"),
             }
         )
         .to_moveit_configs()
@@ -353,28 +378,24 @@ def generate_demo_launch(moveit_config, launch_package_path=None):
         )
 
     # Given the published joint states, publish tf for the robot links
-    ld.add_action(
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                str(launch_package_path / "launch/rsp.launch.py")
-            ),
-        )
-    )
+    # ld.add_action(
+    #     IncludeLaunchDescription(
+    #         PythonLaunchDescriptionSource(str(launch_package_path / "launch/rsp.launch.py")),
+    #     )
+    # )
+    ld.add_action(generate_rsp_launch(moveit_config))
 
-    ld.add_action(
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                str(launch_package_path / "launch/move_group.launch.py")
-            ),
-        )
-    )
+    # ld.add_action(
+    #     IncludeLaunchDescription(
+    #         PythonLaunchDescriptionSource(str(launch_package_path / "launch/move_group.launch.py")),
+    #     )
+    # )
+    ld.add_action(generate_move_group_launch(moveit_config))
 
     # Run Rviz and load the default config to see the state of the move_group node
     ld.add_action(
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                str(launch_package_path / "launch/moveit_rviz.launch.py")
-            ),
+            PythonLaunchDescriptionSource(str(launch_package_path / "launch/moveit_rviz.launch.py")),
             condition=IfCondition(LaunchConfiguration("use_rviz")),
         )
     )
@@ -389,7 +410,7 @@ def generate_demo_launch(moveit_config, launch_package_path=None):
         )
     )
 
-    # Fake joint driver
+    # -- Launch ros2_control node in RViz‑sim mode --
     ld.add_action(
         Node(
             package="controller_manager",
@@ -397,17 +418,41 @@ def generate_demo_launch(moveit_config, launch_package_path=None):
             parameters=[
                 moveit_config.robot_description,
                 str(moveit_config.package_path / "config/ros2_controllers.yaml"),
+                {"use_sim_time": ParameterValue(_use_sim_time_cfg("false"), value_type=bool)},
             ],
-            condition=IfCondition(LaunchConfiguration("use_rviz_sim")),
+            condition=IfCondition(LaunchConfiguration("use_rviz_sim")),        
+        )
+    )
+    # -- Launch ros2_control node in Isaac‑sim mode --
+    ld.add_action(
+        Node(
+            package="controller_manager",
+            executable="ros2_control_node",
+            parameters=[
+                moveit_config.robot_description,
+                str(moveit_config.package_path / "config/ros2_controllers.yaml"),
+                {"use_sim_time": ParameterValue(_use_sim_time_cfg("false"), value_type=bool)},
+            ],
+            condition=IfCondition(LaunchConfiguration("use_isaac_sim")),        
         )
     )
 
+    # -- Spawn controllers in RViz‑sim --
     ld.add_action(
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 str(launch_package_path / "launch/spawn_controllers.launch.py")
             ),
             condition=IfCondition(LaunchConfiguration("use_rviz_sim")),  # Disable controller manager for real robots
+        )
+    )
+    # -- Spawn controllers in Isaac‑sim --
+    ld.add_action(
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                str(launch_package_path / "launch/spawn_controllers.launch.py")
+            ),
+            condition=IfCondition(LaunchConfiguration("use_isaac_sim")),  # Disable controller manager for real robots
         )
     )
 
@@ -439,6 +484,8 @@ def generate_gazebo_launch(moveit_config, launch_package_path=None):
             description="Use Gazebo simulation mode",
         )
     )
+    ld.add_action(DeclareLaunchArgument("use_sim_time", default_value="true"))
+    ld.add_action(DeclareLaunchArgument("controller_spawn_delay", default_value="2.0"))
 
     moveit_config = (
         MoveItConfigsBuilder(
@@ -464,6 +511,17 @@ def generate_gazebo_launch(moveit_config, launch_package_path=None):
                 PythonLaunchDescriptionSource(str(virtual_joints_launch)),
             )
         )
+    
+    # /clock bridge
+    ld.add_action(
+        Node(
+            package="ros_gz_bridge",
+            executable="parameter_bridge",
+            arguments=["/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"],
+            output="screen",
+            condition=IfCondition(LaunchConfiguration("use_sim_time")),
+        )
+    )
 
     # 1) Given the published joint states, publish tf for the robot links
     rsp_launch = generate_rsp_launch(moveit_config)
@@ -532,37 +590,61 @@ def generate_gazebo_launch(moveit_config, launch_package_path=None):
     ld.add_action(spawn_robot)
 
     # Run MoveIt! move_group
-    ld.add_action(
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                str(launch_package_path / "launch/move_group.launch.py")
-            ),
-            launch_arguments={"allow_trajectory_execution": "true"}.items(),
-        )
-    )
+    # ld.add_action(
+    #     IncludeLaunchDescription(
+    #         PythonLaunchDescriptionSource(
+    #             str(launch_package_path / "launch/move_group.launch.py")
+    #         ),
+    #         launch_arguments={"allow_trajectory_execution": "true"}.items(),
+    #     )
+    # )
+    ld.add_action(generate_move_group_launch(moveit_config))
 
     # Start the controller manager
+    control_node = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[
+            moveit_config.robot_description,
+            str(moveit_config.package_path / "config/ros2_controllers.yaml"),
+            {"use_sim_time": ParameterValue(_use_sim_time_cfg("true"), value_type=bool)},
+        ],
+        condition=IfCondition(LaunchConfiguration("use_gazebo")),
+        output="screen",
+    )
+    ld.add_action(control_node)
+
+    # # Start controllers
+    # ld.add_action(
+    #     IncludeLaunchDescription(
+    #         PythonLaunchDescriptionSource(
+    #             str(launch_package_path / "launch/spawn_controllers.launch.py")
+    #         ),
+    #         condition=IfCondition(LaunchConfiguration("use_gazebo")),  # Disable controller manager for real robots
+    #     )
+    # )
+
+    # Spawn controllers after control_node starts (+ delay)
     ld.add_action(
-        Node(
-            package="controller_manager",
-            executable="ros2_control_node",
-            parameters=[
-                moveit_config.robot_description,
-                str(moveit_config.package_path / "config/ros2_controllers.yaml"),
-            ],
-            condition=IfCondition(LaunchConfiguration("use_gazebo")),
+        RegisterEventHandler(
+            OnProcessStart(
+                target_action=control_node,
+                on_start=[
+                    TimerAction(
+                        period=LaunchConfiguration("controller_spawn_delay"),
+
+                        actions=[
+                            IncludeLaunchDescription(
+                                PythonLaunchDescriptionSource(str(launch_package_path / "launch/spawn_controllers.launch.py")),
+                                condition=IfCondition(LaunchConfiguration("use_gazebo")),
+                            )
+                        ],
+                    )
+                ],
+            )
         )
     )
 
-    # Start controllers
-    ld.add_action(
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                str(launch_package_path / "launch/spawn_controllers.launch.py")
-            ),
-            condition=IfCondition(LaunchConfiguration("use_gazebo")),  # Disable controller manager for real robots
-        )
-    )
 
     return ld
 
@@ -610,6 +692,8 @@ def generate_demo_gazebo_launch(moveit_config, launch_package_path=None):
         )
     )
     ld.add_action(DeclareBooleanLaunchArg("use_rviz", default_value=True))
+    ld.add_action(DeclareLaunchArgument("use_sim_time", default_value="true"))
+    ld.add_action(DeclareLaunchArgument("controller_spawn_delay", default_value="2.0"))
 
     moveit_config = (
         MoveItConfigsBuilder(
@@ -628,13 +712,23 @@ def generate_demo_gazebo_launch(moveit_config, launch_package_path=None):
     virtual_joints_launch = (
         launch_package_path / "launch/static_virtual_joint_tfs.launch.py"
     )
-
     if virtual_joints_launch.exists():
         ld.add_action(
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(str(virtual_joints_launch)),
             )
         )
+
+    # /clock bridge 
+    ld.add_action(
+        Node(
+            package="ros_gz_bridge",
+            executable="parameter_bridge",
+            arguments=["/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"],
+            output="screen",
+            condition=IfCondition(LaunchConfiguration("use_sim_time")),
+        )
+    )
 
     # 1) Given the published joint states, publish tf for the robot links
     rsp_launch = generate_rsp_launch(moveit_config)
@@ -701,21 +795,20 @@ def generate_demo_gazebo_launch(moveit_config, launch_package_path=None):
     ld.add_action(spawn_robot)
 
     # Run MoveIt! move_group
-    ld.add_action(
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                str(launch_package_path / "launch/move_group.launch.py")
-            ),
-            launch_arguments={"allow_trajectory_execution": "true"}.items(),
-        )
-    )
+    # ld.add_action(
+    #     IncludeLaunchDescription(
+    #         PythonLaunchDescriptionSource(str(launch_package_path / "launch/move_group.launch.py")),
+    #         launch_arguments={
+    #             "allow_trajectory_execution": "true",
+    #         }.items(),
+    #     )
+    # )
+    ld.add_action(generate_move_group_launch(moveit_config))
 
     # Run Rviz if enabled
     ld.add_action(
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                str(launch_package_path / "launch/moveit_rviz.launch.py")
-            ),
+            PythonLaunchDescriptionSource(str(launch_package_path / "launch/moveit_rviz.launch.py")),
             condition=IfCondition(LaunchConfiguration("use_rviz")),
         )
     )
@@ -731,26 +824,48 @@ def generate_demo_gazebo_launch(moveit_config, launch_package_path=None):
     )
 
     # Start the controller manager
+    control_node = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[
+            moveit_config.robot_description,
+            str(moveit_config.package_path / "config/ros2_controllers.yaml"),
+            {"use_sim_time": ParameterValue(_use_sim_time_cfg("true"), value_type=bool)},
+        ],
+        condition=IfCondition(LaunchConfiguration("use_gazebo")),
+    )
+    ld.add_action(control_node)
+
+    # # Start controllers
+    # ld.add_action(
+    #     IncludeLaunchDescription(
+    #         PythonLaunchDescriptionSource(
+    #             str(launch_package_path / "launch/spawn_controllers.launch.py")
+    #         ),
+    #         condition=IfCondition(LaunchConfiguration("use_gazebo")),  # Disable controller manager for real robots
+    #     )
+    # )
+
+    # Spawn controllers after control_node starts (+ delay)
     ld.add_action(
-        Node(
-            package="controller_manager",
-            executable="ros2_control_node",
-            parameters=[
-                moveit_config.robot_description,
-                str(moveit_config.package_path / "config/ros2_controllers.yaml"),
-            ],
-            condition=IfCondition(LaunchConfiguration("use_gazebo")),
+        RegisterEventHandler(
+            OnProcessStart(
+                target_action=control_node,
+                on_start=[
+                    TimerAction(
+                        period=LaunchConfiguration("controller_spawn_delay"),
+
+                        actions=[
+                            IncludeLaunchDescription(
+                                PythonLaunchDescriptionSource(str(launch_package_path / "launch/spawn_controllers.launch.py")),
+                                condition=IfCondition(LaunchConfiguration("use_gazebo")),  # Disable controller manager for real robots
+                            )
+                        ],
+                    )
+                ],
+            )
         )
     )
 
-    # Start controllers
-    ld.add_action(
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                str(launch_package_path / "launch/spawn_controllers.launch.py")
-            ),
-            condition=IfCondition(LaunchConfiguration("use_gazebo")),  # Disable controller manager for real robots
-        )
-    )
 
     return ld
