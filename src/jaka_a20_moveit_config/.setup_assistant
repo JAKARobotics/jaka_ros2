@@ -1,0 +1,25 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: jaka_description
+    relative_path: urdf/jaka_a20.urdf
+  srdf:
+    relative_path: config/jaka_a20.srdf
+  package_settings:
+    author_name: Meddy
+    author_email: medhanit@jaka.com
+    generated_timestamp: 1772095494
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
