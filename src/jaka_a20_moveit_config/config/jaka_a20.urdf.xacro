@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="jaka_a20">
+    <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
+    <xacro:arg name="use_gazebo" default="false"/>
+    <xacro:arg name="use_rviz_sim" default="false"/>
+
+    <!-- Import jaka_a20 urdf file -->
+    <xacro:include filename="$(find jaka_description)/urdf/jaka_a20.urdf" />
+
+    <!-- Import control_xacro -->
+    <xacro:include filename="jaka_a20.ros2_control.xacro" />
+
+
+    <!-- <xacro:jaka_a20_ros2_control name="FakeSystem" initial_positions_file="$(arg initial_positions_file)"/> -->
+    <xacro:jaka_a20_ros2_control name="jaka_a20_hardware" initial_positions_file="$(arg initial_positions_file)" use_gazebo="$(arg use_gazebo)" use_rviz_sim="$(arg use_rviz_sim)" />
+
+</robot>
