@@ -741,6 +741,24 @@ The key modification made to `launches.py` is the addition of the `use_rviz_sim`
     </figcaption>
   </figure>
 
+   - Backup the original `launches.py` file:  
+      ```bash
+        sudo cp /opt/ros/humble/lib/python3.10/site-packages/moveit_configs_utils/launches.py \
+              /opt/ros/humble/lib/python3.10/site-packages/moveit_configs_utils/launches.py.bak
+      ```
+   
+   - Replace it with the `launches.py` from our package:
+      ```bash
+      sudo cp ~/jaka_ros2/launches.py \
+              /opt/ros/humble/lib/python3.10/site-packages/moveit_configs_utils/launches.py
+      ```
+   
+   - Source both environments:
+      ```bash
+      source /opt/ros/humble/setup.bash
+      source ~/jaka_ros2/install/setup.bash
+      ```
+
 3) Launch MoveIt 2 in RViz simulation mode using the following command:  
 ```bash
 ros2 launch jaka_<robot_model>_moveit_config demo.launch.py use_rviz_sim:=true
