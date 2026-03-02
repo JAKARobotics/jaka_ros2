@@ -1,7 +1,7 @@
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/empty.hpp"
-#include "std_srvs/srv/empty.hpp"
-#include "std_srvs/srv/set_bool.hpp"
+// #include "std_msgs/msg/empty.hpp"
+// #include "std_srvs/srv/empty.hpp"
+// #include "std_srvs/srv/set_bool.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
 
 #include "jaka_planner/JAKAZuRobot.h"
@@ -10,22 +10,26 @@
 
 #include <action_msgs/msg/goal_status_array.hpp>
 #include <control_msgs/action/follow_joint_trajectory.hpp>
-#include <trajectory_msgs/msg/joint_trajectory.hpp>
+// #include <trajectory_msgs/msg/joint_trajectory.hpp>
 #include "rclcpp_action/rclcpp_action.hpp"
 
 #include <string>
 #include <map>
 #include <thread>
+#include <mutex>
+#include <chrono>
+#include <csignal>
+
 using namespace std;
 
 JAKAZuRobot robot;
 const double PI = 3.1415926;
-// bool in_pos;
-// int ret_preempt;
-// int ret_inPos;
 
 typedef rclcpp_action::Server<control_msgs::action::FollowJointTrajectory> Server;
 rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_states_pub;
+
+// NEW: mutex to protect SDK calls (timer thread + goal thread)
+std::mutex robot_mtx;
 
 // Map error codes to messages
 map<int, string> mapErr = {
@@ -45,12 +49,22 @@ map<int, string> mapErr = {
 };
 
 // Determine if the robot has reached the target position.
-bool jointStates(const JointValue &joint_pose)
+bool jointStates(const JointValue &joint_pose, int &err_out)
 {
     // RobotStatus robotstatus;
     JointValue joint_position;
     // robot.get_robot_status(&robotstatus);
-    robot.get_joint_position(&joint_position);
+    {
+        std::lock_guard<std::mutex> lk(robot_mtx);
+        err_out = robot.get_joint_position(&joint_position);
+    }
+    if (err_out != 0)
+    {
+        RCLCPP_ERROR(rclcpp::get_logger("jointStates"),
+                     "get_joint_position failed (%d): %s",
+                     err_out, mapErr.count(err_out) ? mapErr[err_out].c_str() : "unknown");
+        return false;
+    }
 
     bool joint_state = true;
     for (int i = 0; i < 6; i++)
@@ -72,7 +86,10 @@ bool jointStates(const JointValue &joint_pose)
 void goalCb(const shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle)
 {
     // Enable servo mode
-    robot.servo_move_enable(true);
+    {
+        std::lock_guard<std::mutex> lk(robot_mtx);
+        robot.servo_move_enable(true);
+    }
 
     // Retrieve the trajectory from the goal
     auto goal = goal_handle->get_goal();
@@ -84,11 +101,20 @@ void goalCb(const shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::actio
     {
         RCLCPP_ERROR(rclcpp::get_logger("goalCb"), "Trajectory has no points. Aborting goal.");
         goal_handle->abort(make_shared<control_msgs::action::FollowJointTrajectory::Result>());
+        {
+            std::lock_guard<std::mutex> lk(robot_mtx);
+            robot.servo_move_enable(false);
+        } 
         return;
     }
 
     float lastDuration = 0.0;
     JointValue joint_pose;
+
+    // Ensure joint_pose is valid even if point_num == 1
+    for (int j = 0; j < 6; j++) {
+        joint_pose.jVal[j] = traj.points[point_num - 1].positions[j];
+    }
 
     for (int i = 1; i < point_num; i++)
     {
@@ -99,7 +125,7 @@ void goalCb(const shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::actio
 
         // Convert time_from_start to a float seconds
         float Duration = static_cast<float>(traj.points[i].time_from_start.sec) +
-                         static_cast<float>(traj.points[i].time_from_start.nanosec) * 1e-9;
+                         static_cast<float>(traj.points[i].time_from_start.nanosec) * 1e-9f;
 
         // Calculate time delta relative to previous point
         float dt = Duration - lastDuration;
@@ -109,10 +135,28 @@ void goalCb(const shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::actio
         int step_num = static_cast<int>(dt / 0.008f);
         step_num = max(step_num, 1);
 
-        int sdk_res = robot.servo_j(&joint_pose, MoveMode::ABS, step_num);
+        int sdk_res = 0;
+        {
+            std::lock_guard<std::mutex> lk(robot_mtx);
+            sdk_res = robot.servo_j(&joint_pose, MoveMode::ABS, step_num);
+        }
+
+        // A) NEW: abort immediately on SDK error (collision/protective stop/etc.)
         if (sdk_res != 0)
         {
-            RCLCPP_INFO(rclcpp::get_logger("goalCb"), "Servo_j Motion Failed");
+            {
+                std::lock_guard<std::mutex> lk(robot_mtx);
+                robot.motion_abort();
+                robot.servo_move_enable(false);
+            }
+
+            RCLCPP_ERROR(rclcpp::get_logger("goalCb"),
+                         "servo_j failed (%d): %s. Aborting goal.",
+                         sdk_res, mapErr.count(sdk_res) ? mapErr[sdk_res].c_str() : "unknown");
+
+            auto result = make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+            goal_handle->abort(result);
+            return;
         }
 
         RCLCPP_INFO(rclcpp::get_logger("goalCb"), "The return status of servo_j: %d", sdk_res);
@@ -135,16 +179,26 @@ void goalCb(const shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::actio
         // }
     }
 
+    // NEW: timeout wait loop (no infinite hang)
+    auto result = make_shared<control_msgs::action::FollowJointTrajectory::Result>();
+    auto t0 = std::chrono::steady_clock::now();
+    const auto max_wait = std::chrono::seconds(5);
+
     // Wait until the robot is actually at the final position, or until canceled
     while (rclcpp::ok())
     {
-        if (jointStates(joint_pose))
+        int read_err = 0;
+        if (jointStates(joint_pose, read_err))
         {
-            robot.servo_move_enable(false);
+            {
+                std::lock_guard<std::mutex> lk(robot_mtx);
+                robot.servo_move_enable(false);
+            }
             RCLCPP_INFO(rclcpp::get_logger("goalCb"), "Servo Mode Disable: Target Reached");
             RCLCPP_INFO(rclcpp::get_logger("goalCb"), 
                         "==============Motion stops or reaches the target position==============");
-            break;
+            goal_handle->succeed(result);
+            return;
         }
 
         // if (goal_handle->is_canceling())
@@ -159,7 +213,34 @@ void goalCb(const shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::actio
         //     return;
         // }
 
-        rclcpp::sleep_for(chrono::milliseconds(500));
+        // NEW: if we cannot read joint position, abort
+        if (read_err != 0)
+        {
+            {
+                std::lock_guard<std::mutex> lk(robot_mtx);
+                robot.motion_abort();
+                robot.servo_move_enable(false);
+            }
+            RCLCPP_ERROR(rclcpp::get_logger("goalCb"),
+                         "Aborting goal because get_joint_position failed (%d).", read_err);
+            goal_handle->abort(result);
+            return;
+        }
+
+        if (std::chrono::steady_clock::now() - t0 > max_wait)
+        {
+            {
+                std::lock_guard<std::mutex> lk(robot_mtx);
+                robot.motion_abort();
+                robot.servo_move_enable(false);
+            }
+            RCLCPP_ERROR(rclcpp::get_logger("goalCb"),
+                         "Timeout waiting for final position. Aborting goal.");
+            goal_handle->abort(result);
+            return;
+        }
+
+        rclcpp::sleep_for(chrono::milliseconds(50));
     }
 
     // // After processing all points, check if the goal was canceled
@@ -172,10 +253,13 @@ void goalCb(const shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::actio
     //     return;
     // }
 
-    // If we get here, it succeeded
-    auto result = make_shared<control_msgs::action::FollowJointTrajectory::Result>();
-    goal_handle->succeed(result);
-    rclcpp::sleep_for(chrono::milliseconds(500));
+    // If rclcpp not ok
+    {
+        std::lock_guard<std::mutex> lk(robot_mtx);
+        robot.motion_abort();
+        robot.servo_move_enable(false);
+    }
+    goal_handle->abort(result);
 }
 
 // Publish the robot's joint states to /joint_states (for RViz / MoveIt feedback)
@@ -185,7 +269,18 @@ void joint_states_callback(rclcpp::Publisher<sensor_msgs::msg::JointState>::Shar
     // RobotStatus robotstatus;
     JointValue joint_position;
     // robot.get_robot_status(&robotstatus);
-    robot.get_joint_position(&joint_position);
+    int ret = 0;
+    {
+        std::lock_guard<std::mutex> lk(robot_mtx);
+        ret = robot.get_joint_position(&joint_position);
+    }
+    if (ret != 0)
+    {
+        RCLCPP_WARN(rclcpp::get_logger("joint_states_callback"),
+                    "get_joint_position failed (%d): %s",
+                    ret, mapErr.count(ret) ? mapErr[ret].c_str() : "unknown");
+        return; // don't publish stale/invalid data
+    }
 
     for (int i = 0; i < 6; i++)
     {
@@ -214,25 +309,62 @@ int main(int argc, char *argv[])
     string robot_ip = node->declare_parameter("ip", default_ip);
     string robot_model = node->declare_parameter("model", default_model);
 
+    // rclcpp::Rate rate(125);
     // Connect to robot
-    robot.login_in(robot_ip.c_str(), false);
-    rclcpp::Rate rate(125);
+    int ret = 0;
+    {
+        std::lock_guard<std::mutex> lk(robot_mtx);
+        ret = robot.login_in(robot_ip.c_str(), false);
 
-    // Turn off servo at startup
-    robot.servo_move_enable(false);
+        // Turn off servo at startup
+        robot.servo_move_enable(false);
+    }
+    if (ret != 0) {
+    RCLCPP_ERROR(node->get_logger(), "login_in failed (%d): %s",
+                ret, mapErr.count(ret) ? mapErr[ret].c_str() : "unknown");
+    return 1;
+    }
     rclcpp::sleep_for(chrono::milliseconds(500));
 
     // Filter param
-    robot.servo_move_use_joint_LPF(0.5);
+    {
+        std::lock_guard<std::mutex> lk(robot_mtx);
+        robot.servo_move_use_joint_LPF(0.5);
+    }
 
     // Power on + enable
-    robot.power_on();
+    {
+        std::lock_guard<std::mutex> lk(robot_mtx);
+        ret = robot.power_on();
+    }
+    if (ret != 0) {
+    RCLCPP_ERROR(node->get_logger(), "power_on failed (%d): %s", ret,
+                mapErr.count(ret) ? mapErr[ret].c_str() : "unknown");
+    return 1;
+    }
     rclcpp::sleep_for(chrono::seconds(8));
-    robot.enable_robot();
+
+    {
+        std::lock_guard<std::mutex> lk(robot_mtx);
+        ret = robot.enable_robot();
+    }
+    if (ret != 0) {
+    RCLCPP_ERROR(node->get_logger(), "enable_robot failed (%d): %s", ret,
+                mapErr.count(ret) ? mapErr[ret].c_str() : "unknown");
+    return 1;
+    }
     rclcpp::sleep_for(chrono::seconds(4));
 
     // Publisher for /joint_states
     joint_states_pub = node->create_publisher<sensor_msgs::msg::JointState>("/joint_states", 10);
+
+    // NEW: Publish joint states on a timer (keeps RViz updating during goal execution)
+    auto timer = node->create_wall_timer(
+        std::chrono::milliseconds(8),   // ~125 Hz
+        []() {
+            joint_states_callback(joint_states_pub);
+        }
+    );
 
     // Create Action Server for FollowJointTrajectory
     auto moveit_server = rclcpp_action::create_server<control_msgs::action::FollowJointTrajectory>(
@@ -256,20 +388,19 @@ int main(int argc, char *argv[])
         // Execute callback
         [](const shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle) {
             RCLCPP_INFO(rclcpp::get_logger("moveit_server"), "Executing goal");
-            goalCb(goal_handle); 
+            // NEW: execute in a separate thread (avoid blocking executor)
+            std::thread([goal_handle]() {
+                goalCb(goal_handle);
+            }).detach();
         }
     );
 
     RCLCPP_INFO(rclcpp::get_logger("moveit_server"), "==================Moveit Start==================");
 
-    // Main spin loop
-    while (rclcpp::ok())
-    {
-        // Publish joint states at ~125Hz
-        joint_states_callback(joint_states_pub);
-        rate.sleep();
-        rclcpp::spin_some(node);
-    }
+    // NEW: proper executor (no manual while loop)
+    rclcpp::executors::MultiThreadedExecutor exec;
+    exec.add_node(node);
+    exec.spin();
 
     rclcpp::shutdown();
     return 0;
