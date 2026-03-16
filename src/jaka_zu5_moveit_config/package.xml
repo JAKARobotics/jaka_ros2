@@ -6,7 +6,7 @@
   <description>
      An automatically generated package with all the configuration and launch files for using the jaka_zu5 with the MoveIt Motion Planning Framework
   </description>
-  <maintainer email="medhanit@jaka.com">meddy</maintainer>
+  <maintainer email="medhanit@jaka.com">Meddy</maintainer>
 
   <license>BSD</license>
 
@@ -14,7 +14,7 @@
   <url type="bugtracker">https://github.com/ros-planning/moveit2/issues</url>
   <url type="repository">https://github.com/ros-planning/moveit2</url>
 
-  <author email="medhanit@jaka.com">meddy</author>
+  <author email="medhanit@jaka.com">Meddy</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>xacro</buildtool_depend>
@@ -32,7 +32,7 @@
   <!-- <exec_depend>joint_trajectory_controller</exec_depend> -->
   <!-- <exec_depend>gazebo_ros_control</exec_depend> -->
   <exec_depend>gazebo_ros</exec_depend>
-  <exec_depend>position_controllers</exec_depend>
+  <exec_depend>position_controllers</exec_depend>  
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>jaka_description</exec_depend>
   <exec_depend>moveit_configs_utils</exec_depend>
@@ -52,7 +52,7 @@
   <exec_depend>ign_ros2_control</exec_depend>
   <exec_depend>ros2controlcli</exec_depend>
   <test_depend>ament_lint_auto</test_depend>
-
+  
 
   <export>
       <build_type>ament_cmake</build_type>

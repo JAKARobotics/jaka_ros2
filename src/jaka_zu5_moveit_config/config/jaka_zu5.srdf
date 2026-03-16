@@ -36,13 +36,12 @@
         <joint name="joint_6" value="0"/>
     </group_state>
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
-    <disable_collisions link1="Link_0" link2="Link_1" reason="Adjacent"/>
-    <disable_collisions link1="Link_0" link2="Link_2" reason="Never"/>
-    <disable_collisions link1="Link_1" link2="Link_2" reason="Adjacent"/>
-    <disable_collisions link1="Link_1" link2="Link_4" reason="Never"/>
-    <disable_collisions link1="Link_2" link2="Link_3" reason="Adjacent"/>
-    <disable_collisions link1="Link_3" link2="Link_4" reason="Adjacent"/>
-    <disable_collisions link1="Link_4" link2="Link_5" reason="Adjacent"/>
-    <disable_collisions link1="Link_4" link2="Link_6" reason="Never"/>
-    <disable_collisions link1="Link_5" link2="Link_6" reason="Adjacent"/>
+    <disable_collisions link1="Link1" link2="Link2" reason="Adjacent"/>
+    <disable_collisions link1="Link1" link2="Link4" reason="Never"/>
+    <disable_collisions link1="Link1" link2="link0" reason="Adjacent"/>
+    <disable_collisions link1="Link2" link2="Link3" reason="Adjacent"/>
+    <disable_collisions link1="Link3" link2="Link4" reason="Adjacent"/>
+    <disable_collisions link1="Link4" link2="Link5" reason="Adjacent"/>
+    <disable_collisions link1="Link4" link2="Link6" reason="Never"/>
+    <disable_collisions link1="Link5" link2="Link6" reason="Adjacent"/>
 </robot>
