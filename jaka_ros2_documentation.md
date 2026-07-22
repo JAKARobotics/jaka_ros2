@@ -442,7 +442,11 @@ As shown in [Figure 1-2](#figure-1-2-jaka-ros2-package-structure), the JAKA ROS 
 
 ## 3.2. JAKA Driver Package (`jaka_driver`)
 
-The `jaka_driver` package is responsible for low-level robot communication and control. It provides ROS 2 services and topics for motion control, configuration, and status reporting.  
+The `jaka_driver` package is responsible for low-level robot communication and control. It provides ROS 2 services for lifecycle management, motion control, configuration, I/O, and kinematics, together with topics for reporting robot state and position information.  
+
+> **Note:**
+> The driver node has been updated to **not** automatically log in to, power on, or enable the robot when it starts. These operations are now exposed as separate **lifecycle services**, allowing external applications to control the robot lifecycle explicitly.  
+  
 It contains the following key components.
 
 ### 3.2.1	Node and Executables
@@ -451,14 +455,25 @@ The following table provides an overview of the executables in `jaka_driver` pac
 
 | **Executable**       | **Node Name**        | **Purpose**                                                                                                            |
 |------------------|------------------|--------------------------------------------------------------------------------------------------------------------|
-| jaka_driver.cpp  | *jaka_driver*      | The main driver node that initializes the robot and handles ROS 2 topics and service calls for state management, I/O, and motion control. |
-| client.cpp       | *linear_move_client*| A ROS 2 client node that sends service requests to the `/jaka_driver/linear_move` service to command the robot to move linearly based on user-specified poses and motion parameters. |
+| jaka_driver.cpp  | *jaka_driver*      | Main driver node that handles ROS 2 topics and service calls for lifecycle management, motion control, robot configuration, I/O, kinematics, and robot-state reporting. |
+| client.cpp       | *linear_move_client*| ROS 2 client node that sends service requests to the `/jaka_driver/linear_move` service to command the robot to move linearly based on user-specified poses and motion parameters. |
 | sdk_test.cpp     | *moveit_server*    | Tests the JAKA robot SDK by connecting to the robot, enabling it, and retrieving joint positions to verify communication and status information. |
 | servoj_demo.cpp  | *client_test*      | Enables the robot's servo mode using the `/jaka_driver/servo_move_enable` service to switch the robot into servo mode. After enabling servo mode, it uses the `/jaka_driver/servo_j` service to incrementally move the robot's joints to predefined positions, hence creating a continuous motion effect. |
 
 ### 3.2.2 Services
 
 The `jaka_driver` node provides various services categorized as follows:
+
+#### Robot Lifecycle Management Services
+
+The lifecycle services use the `std_srvs/srv/Trigger` service type and return a `success` flag and descriptive `message`.
+
+- **/jaka_driver/login** — Opens the JAKA SDK session using the configured robot IP address.  
+- **/jaka_driver/power_on** — Powers on the robot after a successful SDK login.  
+- **/jaka_driver/enable_robot** — Enables the robot for motion after it has been powered on.  
+- **/jaka_driver/disable_robot** — Aborts current motion, disables servo motion mode, and disables the robot.
+- **/jaka_driver/power_off** — Powers off the robot.
+- **/jaka_driver/logout** — Closes the active JAKA SDK session.
 
 #### Motion Control Services
 - **/jaka_driver/linear_move** - Executes linear motion in the user coordinate system.
@@ -467,7 +482,10 @@ The `jaka_driver` node provides various services categorized as follows:
 - **/jaka_driver/servo_move_enable** - Enables servo position control mode.
 - **/jaka_driver/servo_p** - Controls motion in cartesian coordinate system in servo mode.
 - **/jaka_driver/servo_j** - Controls motion in joint coordinate system in servo mode.
-- **/jaka_driver/stop_move** - Stops the robot's motion.
+- **/jaka_driver/stop_move** - Aborts the current robot motion.
+
+> **Note:**
+> The driver uses a multithreaded executor with separate callback groups for normal SDK commands and interrupt operations. Therefore, `/jaka_driver/stop_move` and `/jaka_driver/disable_robot` can be processed while a blocking motion service (for example, `/jaka_driver/joint_move`) is running.
 
 #### Parameter Configuration Services
 - **/jaka_driver/set_toolframe** - Configures TCP (Tool Center Point) parameters.
@@ -484,7 +502,7 @@ The `jaka_driver` node provides various services categorized as follows:
 
 ### 3.2.3 Topics
 
-The `jaka_driver` node publishes real-time robot status updates through the following topics:
+The `jaka_driver` node publishes real-time robot status updates through the following topics while the SDK is logged in:
 
 - **/jaka_driver/tool_position** - End-effector position and orientation.
 - **/jaka_driver/joint_position** - Joint position information.
@@ -524,7 +542,7 @@ This section provides example service calls and executable runs that request var
 
 ### 4.1.1	Starting the JAKA ROS 2 Driver
 
-Before executing robot commands, the `jaka_driver` node must be started. Use the following command to launch the driver and establish a connection with the robot:
+Before executing robot commands, the `jaka_driver` node must be started. Use the following command to launch the driver node:
 ```bash
 ros2 launch jaka_driver robot_start.launch.py ip:=<robot_ip>
 ```
@@ -537,7 +555,68 @@ ros2 launch jaka_driver robot_start.launch.py ip:=<robot_ip>
   </figcaption>
 </figure>
 
-### 4.1.2	Example Service Commands
+### 4.1.2 Managing the Robot Lifecycle
+
+After launching the node, verify that the JAKA driver services are available:
+
+```bash
+ros2 service list | grep jaka_driver
+```
+
+#### Starting the Robot
+
+Call the lifecycle services in the following order.
+
+**1) Log in to the JAKA SDK**  
+```bash
+ros2 service call /jaka_driver/login std_srvs/srv/Trigger "{}"
+```
+
+**2) Power on the robot**  
+```bash
+ros2 service call /jaka_driver/power_on std_srvs/srv/Trigger "{}"
+```
+
+**3) Enable the robot**  
+```bash
+ros2 service call /jaka_driver/enable_robot std_srvs/srv/Trigger "{}"
+```
+
+The normal startup sequence is:  
+`login → power_on → enable_robot`
+
+The power-on and enable services may take several seconds to return while the controller completes the requested state transition.
+
+#### Stopping or Shutting Down the Robot
+
+Use the following commands in order when stopping the robot and ending the SDK session.
+
+**1) Stop the current motion**  
+```bash
+ros2 service call /jaka_driver/stop_move std_srvs/srv/Trigger "{}"
+```
+
+**2) Disable the robot**  
+```bash
+ros2 service call /jaka_driver/disable_robot std_srvs/srv/Trigger "{}"
+``` 
+
+**3) Power off the robot**  
+```bash
+ros2 service call /jaka_driver/power_off std_srvs/srv/Trigger "{}"
+```  
+
+**4) Log out of the JAKA SDK**  
+```bash
+ros2 service call /jaka_driver/logout std_srvs/srv/Trigger "{}"
+```
+
+The normal shutdown sequence is:  
+`stop_move → disable_robot → power_off → logout`
+
+> **Safety Note:** Always ensure that the robot workspace is clear before powering on, enabling, or commanding robot motion. Use `/jaka_driver/stop_move` whenever an active motion must be interrupted.
+
+### 4.1.3	 Example Motion and Kinematics Service Commands
 
 The following examples demonstrate how to send control commands to JAKA robots using the `jaka_driver` package.
 
@@ -557,7 +636,11 @@ ros2 service call /jaka_driver/joint_move jaka_msgs/srv/Move "{
 }"
 ```  
 
-> **Note:** The joint motion interface is blocking by default. To use a non-blocking interface, modify the corresponding parameter in **jaka_driver.cpp**.
+> **Note:** 
+> - The SDK must be logged in, and the robot must be powered on and enabled before sending a motion command.
+> - The `pose` array must contain at least six joint positions. The first six values correspond to joints 1 through 6 and are expressed in radians.
+> - The joint-motion service is blocking  by default and returns after the motion completes or is aborted. To use a non-blocking interface, modify the corresponding parameter in **jaka_driver.cpp**.
+> - A blocking motion can be interrupted through /`jaka_driver/stop_move` or `/jaka_driver/disable_robot`.
 
   <figure id="figure-4-2">
     <img src="images/Figure 4-2: Joint Motion Service.png" alt="Joint Motion Service">
@@ -589,7 +672,13 @@ ros2 service call /jaka_driver/linear_move jaka_msgs/srv/Move "{
 }"
 ```
 
-> **Important:** The pose parameters in this example are for reference only. Ensure that the pose values are within the robot's workspace and do not result in singularities or exceed motion limits.
+> **Note:** 
+> - The SDK must be logged in, and the robot must be powered on and enabled before sending a motion command.
+> - The `pose` array must contain at least six Cartesian pose values.
+> - `pose[0]`, `pose[1]`, and `pose[2]` represent the Cartesian X, Y, and Z position in millimetres.
+> - `pose[3]`, `pose[4]`, and `pose[5]` represent an angle-axis rotation vector in radians. The vector direction specifies the rotation axis, and its magnitude specifies the rotation angle.
+> - The linear-motion service is blocking and can be interrupted through `/jaka_driver/stop_move` or `/jaka_driver/disable_robot`.
+> - The pose parameters in this example are for reference only. Ensure that the target pose is  within the robot's workspace and do not result in singularities, collision, or exceed motion limits.
 
   <figure id="figure-4-4">
     <img src="images/Figure 4-4: Linear Motion Service.png" alt="Linear Motion Service">
@@ -636,7 +725,7 @@ cartesian_pose: [130.7, 116, 291, 3.13, 0, -1.5707]
     </figcaption>
   </figure>
 
-### 4.1.3	Running Executables in the JAKA Driver Package
+### 4.1.4	Running Executables in the JAKA Driver Package
 
 In addition to the `jaka_driver` node, the JAKA driver package includes other executables for basic testing of certain services and SDK functions available in the `jaka_driver` package. These executables allow you to interact with the robot in different ways, test specific services, and verify robot functionality. 
 Below are the necessary steps and examples for running these executables.

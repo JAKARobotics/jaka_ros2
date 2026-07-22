@@ -7,7 +7,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     return LaunchDescription([
         # Declare the 'ip' argument
-        DeclareLaunchArgument('ip', default_value='127.0.0.1', description='IP address'),
+        DeclareLaunchArgument('ip', default_value='10.5.5.100', description='IP address'),
 
         # Print the IP to the log for debugging
         LogInfo(

@@ -2,6 +2,7 @@
 #include "std_msgs/msg/string.hpp"
 #include "std_srvs/srv/empty.hpp"
 #include "std_srvs/srv/set_bool.hpp"
+#include "std_srvs/srv/trigger.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
 
@@ -37,15 +38,17 @@
 #include <map>
 #include <chrono>
 #include <thread>
+#include <atomic>
+#include <mutex>
 using namespace std;
 
 const double PI = 3.1415926;
 //Define variable: the direction that was sent down the last time the jog was called
-int jog_index_last = -1; 
+std::atomic<int> jog_index_last = -1; 
 //Define variable: number of calls to jog
-int jog_count = 0;
+std::atomic<int> jog_count = 0;
 //Define variable: save the number of jog calls
-int jog_count_temp = 0;
+std::atomic<int> jog_count_temp = 0;
 JAKAZuRobot robot;
 //SDK interface return status
 map<int, string>mapErr = {
@@ -64,6 +67,10 @@ map<int, string>mapErr = {
     {-12,"ERR_MOTION_ABNORMAL"}
 };
 
+std::string robot_ip = "10.5.5.100";
+std::atomic<bool> sdk_logged_in{false};
+std::mutex session_mutex;
+
 // Declare publishers
 rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr tool_position_pub;
 rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_position_pub;
@@ -72,6 +79,12 @@ rclcpp::Publisher<jaka_msgs::msg::RobotMsg>::SharedPtr robot_state_pub;
 bool linear_move_callback(const shared_ptr<jaka_msgs::srv::Move::Request> request,
     shared_ptr<jaka_msgs::srv::Move::Response> response)
 {
+    if (request->pose.size() < 6)
+    {
+        response->ret = 0;
+        response->message = "Six Cartesian pose values are required";
+        return false;
+    }
     CartesianPose end_pose;
     double speed = static_cast<double>(request->mvvelo);
     double accel = static_cast<double>(request->mvacc);
@@ -111,6 +124,12 @@ bool linear_move_callback(const shared_ptr<jaka_msgs::srv::Move::Request> reques
 bool joint_move_callback(const shared_ptr<jaka_msgs::srv::Move::Request> request,
     shared_ptr<jaka_msgs::srv::Move::Response> response)
 {
+    if (request->pose.size() < 6)
+    {
+        response->ret = 0;
+        response->message = "Six joint positions are required";
+        return false;
+    }
     JointValue joint_pose;
     joint_pose.jVal[0] = request->pose[0];
     joint_pose.jVal[1] = request->pose[1];
@@ -174,10 +193,18 @@ bool jog_callback(const shared_ptr<jaka_msgs::srv::Move::Request> request,
             break; 
         default:
             RCLCPP_INFO(rclcpp::get_logger("jog_callback"), "Coordinate system input error, please re-enter");
-            return true;
+            response->ret = 0;
+            response->message = "Invalid coordinate mode";
+            return false;
     }
     // 4. Determine the direction of velocity 
     //Determine whether robot motion (articulated or Cartesian) is in a positive or negative direction
+    if (request->index < 0 || request->index > 11)
+    {
+        response->ret = 0;
+        response->message = "Invalid jog index";
+        return false;
+    }   
     if(request->index & 1)
     {
         move_velocity = -move_velocity;
@@ -214,7 +241,7 @@ bool jog_callback(const shared_ptr<jaka_msgs::srv::Move::Request> request,
         response->message = "Robot is jogging";
         RCLCPP_INFO(rclcpp::get_logger("jog_callback"), "Robot is jogging");
     }
-    jog_count = jog_count + 1;
+    jog_count.fetch_add(1);
     return true;
 }
 
@@ -240,6 +267,12 @@ bool servo_move_enable_callback(const shared_ptr<jaka_msgs::srv::ServoMoveEnable
 bool servo_p_callback(const shared_ptr<jaka_msgs::srv::ServoMove::Request> request,
     shared_ptr<jaka_msgs::srv::ServoMove::Response> response)
 {
+    if (request->pose.size() < 6)
+    {
+        response->ret = 0;
+        response->message = "Six Cartesian pose values are required";
+        return false;
+    }
     //speed * 0.008
     CartesianPose cartesian_pose;
     cartesian_pose.tran.x = request->pose[0];
@@ -266,6 +299,12 @@ bool servo_p_callback(const shared_ptr<jaka_msgs::srv::ServoMove::Request> reque
 bool servo_j_callback(const shared_ptr<jaka_msgs::srv::ServoMove::Request> request,
     shared_ptr<jaka_msgs::srv::ServoMove::Response> response)
 {
+    if (request->pose.size() < 6)
+    {
+        response->ret = 0;
+        response->message = "Six joint positions are required";
+        return false;
+    }
     JointValue joint_pose;
     joint_pose.jVal[0] = request->pose[0];
     joint_pose.jVal[1] = request->pose[1];
@@ -288,30 +327,52 @@ bool servo_j_callback(const shared_ptr<jaka_msgs::srv::ServoMove::Request> reque
     return true;
 }
 
-bool stop_move_callback([[maybe_unused]] const shared_ptr<std_srvs::srv::Empty::Request> request,
-    [[maybe_unused]] shared_ptr<std_srvs::srv::Empty::Response> response)
+void stop_move_callback(
+    const std::shared_ptr<std_srvs::srv::Trigger::Request>,
+    std::shared_ptr<std_srvs::srv::Trigger::Response> response)
 {
     //Initialize jog related parameters
-    jog_count = 0;
-    jog_count_temp = 0;
-    jog_index_last = -1;
+    jog_count.store(0);
+    jog_count_temp.store(0);
+    jog_index_last.store(-1);
+
+    std::lock_guard<std::mutex> lock(session_mutex);
+    if (!sdk_logged_in.load())
+    {
+        RCLCPP_WARN(rclcpp::get_logger("stop_move_callback"), "SDK is not logged in");
+        response->success = false;
+        response->message = "SDK is not logged in";
+        return;
+    }
+
     int ret = robot.motion_abort();
+
     switch(ret)
     {
         case 0:
             RCLCPP_INFO(rclcpp::get_logger("stop_move_callback"), "stop_move has been executed");
+            response->success = true;
+            response->message = "stop_move has been executed";
             break;
         default:
-            RCLCPP_INFO(rclcpp::get_logger("stop_move_callback"), "error occurred: %s", mapErr[ret].c_str());
-            return false;;
+            RCLCPP_ERROR(rclcpp::get_logger("stop_move_callback"), "error occurred: %s", mapErr[ret].c_str());
+            response->success = false;
+            response->message = "error occurred: " + mapErr[ret];
+            return;
     }
-    return true;
+    return;
 }
 
 
 bool set_toolFrame_callback(const shared_ptr<jaka_msgs::srv::SetTcpFrame::Request> request,
     shared_ptr<jaka_msgs::srv::SetTcpFrame::Response> response)
 {
+    if (request->pose.size() < 6)
+    {
+        response->ret = 0;
+        response->message = "Six Cartesian pose values are required";
+        return false;
+    }
     CartesianPose tool_frame;
     int tool_frame_id = request->tool_num;
     tool_frame.tran.x = request->pose[0];
@@ -345,6 +406,12 @@ bool set_toolFrame_callback(const shared_ptr<jaka_msgs::srv::SetTcpFrame::Reques
 bool set_userFrame_callback(const shared_ptr<jaka_msgs::srv::SetUserFrame::Request> request,
     shared_ptr<jaka_msgs::srv::SetUserFrame::Response> response)
 {
+    if (request->pose.size() < 6)
+    {
+        response->ret = 0;
+        response->message = "Six Cartesian pose values are required";
+        return false;
+    }
     CartesianPose user_frame;
     int user_frame_id = request->user_num; 
     user_frame.tran.x = request->pose[0];
@@ -486,6 +553,10 @@ bool set_io_callback(const shared_ptr<jaka_msgs::srv::SetIO::Request> request,
         case 2:
             type = IO_EXTEND;
             break;
+        default:
+            response->ret = 0;
+            response->message = "Invalid IO type";
+            return false;
     }
     float value = request->value;
     string signal = request->signal;
@@ -506,6 +577,12 @@ bool set_io_callback(const shared_ptr<jaka_msgs::srv::SetIO::Request> request,
     else if(signal == "analog")
     {
         ret = robot.set_analog_output(type, index, value);
+    }
+    else
+    {
+        response->ret = 0;
+        response->message = "Invalid signal type";
+        return false;
     }
     switch(ret)
     {
@@ -621,6 +698,11 @@ bool get_io_callback(const shared_ptr<jaka_msgs::srv::GetIO::Request> request,
 bool get_fk_callback(const shared_ptr<jaka_msgs::srv::GetFK::Request> request,
     shared_ptr<jaka_msgs::srv::GetFK::Response> response)
 {
+    if (request->joint.size() < 6)
+    {
+        response->message = "Six joint values are required";
+        return false;
+    }
     JointValue joint_pose;
     CartesianPose cartesian_pose;
     for(int i = 0; i < 6; i++)
@@ -655,6 +737,17 @@ bool get_fk_callback(const shared_ptr<jaka_msgs::srv::GetFK::Request> request,
 bool get_ik_callback(const shared_ptr<jaka_msgs::srv::GetIK::Request> request,
     shared_ptr<jaka_msgs::srv::GetIK::Response> response)
 {
+    if (request->ref_joint.size() < 6)
+    {
+        response->message = "Six reference joint values are required";
+        return false;
+    }
+
+    if (request->cartesian_pose.size() < 6)
+    {
+        response->message = "Six Cartesian pose values are required";
+        return false;
+    }
     JointValue joint_pose;
     JointValue ref_joint;
     CartesianPose cartesian_pose;
@@ -707,24 +800,19 @@ void tool_position_callback(const rclcpp::Publisher<geometry_msgs::msg::TwistSta
     // Check if publisher is valid
     if (!tool_position_pub)
     {
-        RCLCPP_ERROR(rclcpp::get_logger("jaka_driver"), "Publisher is not initialized!");
+        RCLCPP_ERROR(rclcpp::get_logger("tool_position_callback"), "Publisher is not initialized!");
         return;
     }
 
     geometry_msgs::msg::TwistStamped  tool_position;
-    // RobotStatus robotstatus;
     CartesianPose tcp_position;
     RotMatrix rot;
     Rpy rpy;
-    // robot.get_robot_status(&robotstatus);
-    robot.get_tcp_position(&tcp_position);
-
-    // tool_position.twist.linear.x = robotstatus.cartesiantran_position[0];
-    // tool_position.twist.linear.y = robotstatus.cartesiantran_position[1];
-    // tool_position.twist.linear.z = robotstatus.cartesiantran_position[2];
-    // rpy.rx = robotstatus.cartesiantran_position[3];
-    // rpy.ry = robotstatus.cartesiantran_position[4];
-    // rpy.rz = robotstatus.cartesiantran_position[5];
+    if (robot.get_tcp_position(&tcp_position) != 0)
+    {
+        RCLCPP_ERROR(rclcpp::get_logger("tool_position_callback"), "Failed to get TCP position!");
+        return;
+    }
 
     tool_position.twist.linear.x = tcp_position.tran.x;
     tool_position.twist.linear.y = tcp_position.tran.y;
@@ -734,30 +822,19 @@ void tool_position_callback(const rclcpp::Publisher<geometry_msgs::msg::TwistSta
     rpy.rz = tcp_position.rpy.rz;
 
     robot.rpy_to_rot_matrix(&rpy, &rot);
-    // Eigen::Vector3d angaxis = Rot2Angaxis(rot);
-    // tool_position.twist.angular.x = angaxis[0];
-    // tool_position.twist.angular.y = angaxis[1];
-    // tool_position.twist.angular.z = angaxis[2];
+
     tool_position.twist.angular.x = (rpy.rx )/PI*180;
     tool_position.twist.angular.y = (rpy.ry )/PI*180;
     tool_position.twist.angular.z = (rpy.rz )/PI*180;
-
-    // Eigen::Vector3d eulerAngle(rpy.rx,rpy.ry,rpy.rz);
-    // Eigen::AngleAxisd rollAngle(Eigen::AngleAxisd(eulerAngle(0),Eigen::Vector3d::UnitX()));
-    // Eigen::AngleAxisd pitchAngle(Eigen::AngleAxisd(eulerAngle(1),Eigen::Vector3d::UnitY()));
-    // Eigen::AngleAxisd yawAngle(Eigen::AngleAxisd(eulerAngle(2),Eigen::Vector3d::UnitZ()));
-    // Eigen::AngleAxisd rotation_vector;
-    // rotation_vector=yawAngle*pitchAngle*rollAngle;
-    // cout << "angle is: " << rotation_vector.angle() << endl;
-    // cout << "axis is: " << rotation_vector.axis() << endl;
-    // double angle = rotation_vector.angle();
-    // Eigen::Vector3d axis = rotation_vector.axis();
-    // Eigen::Vector3d v = angle * axis;
-    // tool_position.twist.angular.x = v[0];
-    // tool_position.twist.angular.y = v[1];
-    // tool_position.twist.angular.z = v[2];
     
     tool_position.header.stamp = rclcpp::Clock().now();
+
+    int user_frame_id = -1;
+    if (robot.get_user_frame_id(&user_frame_id) == 0) {
+        tool_position.header.frame_id =
+            "jaka_user_frame_" + std::to_string(user_frame_id);
+    }
+
     tool_position_pub->publish(tool_position);
 }
 
@@ -767,7 +844,11 @@ void joint_position_callback(const rclcpp::Publisher<sensor_msgs::msg::JointStat
     // RobotStatus robotstatus;
     JointValue joint_pos;
     // robot.get_robot_status(&robotstatus);
-    robot.get_joint_position(&joint_pos);
+    if (robot.get_joint_position(&joint_pos) != 0)
+    {
+        RCLCPP_ERROR(rclcpp::get_logger("joint_position_callback"), "Failed to get joint position!");
+        return;
+    }
     
     for (int i = 0; i < 6; i++)
     {
@@ -785,7 +866,6 @@ void joint_position_callback(const rclcpp::Publisher<sensor_msgs::msg::JointStat
 void robot_states_callback(const rclcpp::Publisher<jaka_msgs::msg::RobotMsg>::SharedPtr& robot_states_pub)
 {
     jaka_msgs::msg::RobotMsg robot_states;
-    // RobotStatus robotstatus;
     RobotStatus_simple robotstatus_simple;
     ProgramState programstate;
     BOOL in_pos = true;
@@ -796,21 +876,25 @@ void robot_states_callback(const rclcpp::Publisher<jaka_msgs::msg::RobotMsg>::Sh
     robot.is_in_collision(&in_col);
     robot.is_in_drag_mode(&drag_mode);
     robot.is_in_estop(&emergency_stop);
-    // robot.get_robot_status(&robotstatus);
-    robot.get_robot_status_simple(&robotstatus_simple);
-    robot.get_program_state(&programstate);
+    if (robot.get_robot_status_simple(&robotstatus_simple) != 0)
+    {
+        RCLCPP_ERROR(rclcpp::get_logger("robot_states_callback"), "Failed to get robot status!");
+        return;
+    }
+    if (robot.get_program_state(&programstate) != 0)
+    {
+        RCLCPP_ERROR(rclcpp::get_logger("robot_states_callback"), "Failed to get program state!");
+        return;
+    }
 
-    // if(robotstatus.emergency_stop)
     if(emergency_stop)
     {
         robot_states.motion_state = 2;
     }
-    // else if(robotstatus.errcode)
     else if(robotstatus_simple.errcode)
     {
         robot_states.motion_state = 4;
     }
-    // else if(in_pos && programstate == PROGRAM_IDLE && (!robotstatus.drag_status))
     else if(in_pos && programstate == PROGRAM_IDLE && (!drag_mode))
     {
         robot_states.motion_state = 0;
@@ -859,35 +943,243 @@ void robot_states_callback(const rclcpp::Publisher<jaka_msgs::msg::RobotMsg>::Sh
 
 void stop_jog_callback()
 {
-     if (jog_count >= 1 && jog_count_temp == jog_count )
+    if (!sdk_logged_in.load())
+    {
+        jog_count.store(0);
+        jog_count_temp.store(0);
+        jog_index_last.store(-1);
+        return;
+    }
+    if (jog_count >= 1 && jog_count_temp.load() == jog_count.load())
     {
         robot.jog_stop(-1);
-        jog_count = 0;
-        jog_count_temp = 0;
-        jog_index_last = -1;
+        jog_count.store(0);
+        jog_count_temp.store(0);
+        jog_index_last.store(-1);
         RCLCPP_INFO(rclcpp::get_logger("stop_jog_callback"), "jog stop");
         
     }
-    jog_count_temp = jog_count;
+    jog_count_temp.store(jog_count.load());
+}
+
+void login_callback(
+    const std::shared_ptr<std_srvs::srv::Trigger::Request>,
+    std::shared_ptr<std_srvs::srv::Trigger::Response> response)
+{
+    std::lock_guard<std::mutex> lock(session_mutex);
+
+    if (sdk_logged_in.load())
+    {
+        response->success = true;
+        response->message = "SDK is already logged in";
+        return;
+    }
+
+    int ret = robot.login_in(robot_ip.c_str(), false);
+
+    if (ret == 0)
+    {
+        sdk_logged_in.store(true);
+
+        robot.set_status_data_update_time_interval(100);
+        robot.set_block_wait_timeout(120);
+
+        response->success = true;
+        response->message = "login_in has been executed";
+    }
+    else
+    {
+        response->success = false;
+        response->message = "error occurred:" + mapErr[ret];
+    }
+}
+
+void power_on_callback(
+    const std::shared_ptr<std_srvs::srv::Trigger::Request>,
+    std::shared_ptr<std_srvs::srv::Trigger::Response> response)
+{
+    int ret;
+
+    {
+        std::lock_guard<std::mutex> lock(session_mutex);
+
+        if (!sdk_logged_in.load())
+        {
+            response->success = false;
+            response->message = "SDK is not logged in";
+            return;
+        }
+
+        ret = robot.power_on();
+    }
+
+    if (ret == 0)
+    {
+        rclcpp::sleep_for(chrono::seconds(8));
+        response->success = true;
+        response->message = "power_on has been executed";
+    }
+    else
+    {
+        response->success = false;
+        response->message = "error occurred:" + mapErr[ret];
+    }
+}
+
+void enable_robot_callback(
+    const std::shared_ptr<std_srvs::srv::Trigger::Request>,
+    std::shared_ptr<std_srvs::srv::Trigger::Response> response)
+{
+    int ret;
+
+    {
+        std::lock_guard<std::mutex> lock(session_mutex);
+
+        if (!sdk_logged_in.load())
+        {
+            response->success = false;
+            response->message = "SDK is not logged in";
+            return;
+        }
+
+        ret = robot.enable_robot();
+    }
+
+    if (ret == 0)
+    {
+        rclcpp::sleep_for(chrono::seconds(4));
+        robot.servo_speed_foresight(15, 0.03);
+
+        response->success = true;
+        response->message = "enable_robot has been executed";
+    }
+    else
+    {
+        response->success = false;
+        response->message = "error occurred:" + mapErr[ret];
+    }
+}
+
+void disable_robot_callback(
+    const std::shared_ptr<std_srvs::srv::Trigger::Request>,
+    std::shared_ptr<std_srvs::srv::Trigger::Response> response)
+{
+    std::lock_guard<std::mutex> lock(session_mutex);
+
+    if (!sdk_logged_in.load())
+    {
+        response->success = false;
+        response->message = "SDK is not logged in";
+        return;
+    }
+
+    // Stop current motion before disabling.
+    robot.motion_abort();
+    robot.servo_move_enable(FALSE);
+
+    int ret = robot.disable_robot();
+
+    if (ret == 0)
+    {
+        response->success = true;
+        response->message = "disable_robot has been executed";
+    }
+    else
+    {
+        response->success = false;
+        response->message = "error occurred:" + mapErr[ret];
+    }
+}
+
+void power_off_callback(
+    const std::shared_ptr<std_srvs::srv::Trigger::Request>,
+    std::shared_ptr<std_srvs::srv::Trigger::Response> response)
+{
+    std::lock_guard<std::mutex> lock(session_mutex);
+
+    if (!sdk_logged_in.load())
+    {
+        response->success = false;
+        response->message = "SDK is not logged in";
+        return;
+    }
+
+    int ret = robot.power_off();
+
+    if (ret == 0)
+    {
+        response->success = true;
+        response->message = "power_off has been executed";
+    }
+    else
+    {
+        response->success = false;
+        response->message = "error occurred:" + mapErr[ret];
+    }
+}
+
+void logout_callback(
+    const std::shared_ptr<std_srvs::srv::Trigger::Request>,
+    std::shared_ptr<std_srvs::srv::Trigger::Response> response)
+{
+    if (!sdk_logged_in.load())
+    {
+        response->success = true;
+        response->message = "SDK is already logged out";
+        return;
+    }
+
+    sdk_logged_in.store(false);
+
+    int ret;
+    {
+        std::lock_guard<std::mutex> lock(session_mutex);
+        ret = robot.login_out();
+    }
+
+    if (ret == 0)
+    {
+        response->success = true;
+        response->message = "login_out has been executed";
+    }
+    else
+    {
+        sdk_logged_in.store(true);
+        response->success = false;
+        response->message = "error occurred:" + mapErr[ret];
+    }
 }
 
 void get_conn_scoket_state(){
-    // RobotStatus robot_status;
 	JointValue temp_joints;
 
     while (rclcpp::ok())
     {
-        // int ret = robot.get_robot_status(&robot_status);
-        int ret = robot.get_joint_position(&temp_joints);
+        if (!sdk_logged_in.load())
+        {
+            rclcpp::sleep_for(chrono::milliseconds(100));
+            continue;
+        }
 
-		// if (ret)
-        // {
-        //     RCLCPP_ERROR(rclcpp::get_logger("get_conn_socket_state"), "get_robot_status error!!!");
-        // }
-        // else if(!robot_status.is_socket_connect)
-		// {
-        //     RCLCPP_ERROR(rclcpp::get_logger("get_conn_socket_state"), "connect error!!!");
-        // }
+        int ret;
+        {
+            std::lock_guard<std::mutex> lock(session_mutex);
+
+            if (!sdk_logged_in.load())
+            {
+                continue;
+            }
+
+            ret = robot.get_joint_position(&temp_joints);
+
+            if(ret==0)
+            {
+                tool_position_callback(tool_position_pub);
+                joint_position_callback(joint_position_pub);
+                robot_states_callback(robot_state_pub);
+            
+            }
+        }
 
         if (ret)
         {
@@ -895,16 +1187,6 @@ void get_conn_scoket_state(){
                          "Connection error or get_joint_position failed, error_code: %d, error: %s", ret, mapErr[ret].c_str());
         }
 
-        if(ret==0)
-        {
-            // RCLCPP_INFO(rclcpp::get_logger("get_conn_scoket_state"), "ret=0");
-
-
-            tool_position_callback(tool_position_pub);
-            joint_position_callback(joint_position_pub);
-            robot_states_callback(robot_state_pub);
-        
-        }
         rclcpp::sleep_for(chrono::milliseconds(100)); 
     }    
 }
@@ -916,52 +1198,47 @@ int main(int argc, char *argv[])
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("jaka_driver");
     rclcpp::Rate rate(125); 
-    // robot.login_in(argv[1]);
     string default_ip = "10.5.5.100";
-    string robot_ip = node->declare_parameter("ip", default_ip);
-    robot.login_in(robot_ip.c_str(), false);
-    robot.set_status_data_update_time_interval(100);
-    robot.set_block_wait_timeout(120);
-    robot.power_on();
-    sleep(8);
-    robot.enable_robot();
-    sleep(4);
-    //Joint-space first-order low-pass filtering in robot servo mode
-    //robot.servo_move_use_joint_LPF(2);
-    robot.servo_speed_foresight(15,0.03);
+    robot_ip = node->declare_parameter<std::string>("ip", default_ip);
+
+    // Blocking motion commands run in this group.
+    auto sdk_callback_group = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+
+    // Interrupt services must run independently of blocking motion.
+    auto interrupt_callback_group = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
     //1.1 Linear motion (in customized user coordinate system)
-    auto linear_move_service = node->create_service<jaka_msgs::srv::Move>("/jaka_driver/linear_move", &linear_move_callback);
+    auto linear_move_service = node->create_service<jaka_msgs::srv::Move>("/jaka_driver/linear_move", &linear_move_callback,  rmw_qos_profile_services_default, sdk_callback_group);
     //1.2 Joint motion
-    auto joint_move_service = node->create_service<jaka_msgs::srv::Move>("/jaka_driver/joint_move", &joint_move_callback);
+    auto joint_move_service = node->create_service<jaka_msgs::srv::Move>("/jaka_driver/joint_move", &joint_move_callback, rmw_qos_profile_services_default, sdk_callback_group);
     //1.3 Jog motion
-    auto jog_service = node->create_service<jaka_msgs::srv::Move>("/jaka_driver/jog", &jog_callback);
+    auto jog_service = node->create_service<jaka_msgs::srv::Move>("/jaka_driver/jog", &jog_callback, rmw_qos_profile_services_default, sdk_callback_group);
     //1.4 Servo Position Control Mode Enable
-    auto servo_move_enable_service = node->create_service<jaka_msgs::srv::ServoMoveEnable>("/jaka_driver/servo_move_enable", &servo_move_enable_callback);
+    auto servo_move_enable_service = node->create_service<jaka_msgs::srv::ServoMoveEnable>("/jaka_driver/servo_move_enable", &servo_move_enable_callback, rmw_qos_profile_services_default, sdk_callback_group);
     //1.5 Servo-mode motion in Cartesian space
-    auto servo_p_service = node->create_service<jaka_msgs::srv::ServoMove>("/jaka_driver/servo_p", &servo_p_callback);
+    auto servo_p_service = node->create_service<jaka_msgs::srv::ServoMove>("/jaka_driver/servo_p", &servo_p_callback, rmw_qos_profile_services_default, sdk_callback_group);
     //1.6 Joint space servo mode motion
-    auto servo_j_service = node->create_service<jaka_msgs::srv::ServoMove>("/jaka_driver/servo_j", &servo_j_callback);
+    auto servo_j_service = node->create_service<jaka_msgs::srv::ServoMove>("/jaka_driver/servo_j", &servo_j_callback, rmw_qos_profile_services_default, sdk_callback_group);
     //1.7 stop motion
-    auto stop_move_service = node->create_service<std_srvs::srv::Empty>("/jaka_driver/stop_move", &stop_move_callback);
+    auto stop_move_service = node->create_service<std_srvs::srv::Trigger>("/jaka_driver/stop_move", &stop_move_callback, rmw_qos_profile_services_default, interrupt_callback_group);
     //2.1 Setting tcp parameters
-    auto set_toolframe_service = node->create_service<jaka_msgs::srv::SetTcpFrame>("/jaka_driver/set_toolframe", &set_toolFrame_callback);
+    auto set_toolframe_service = node->create_service<jaka_msgs::srv::SetTcpFrame>("/jaka_driver/set_toolframe", &set_toolFrame_callback, rmw_qos_profile_services_default, sdk_callback_group);
     //2.2 Setting user coordinate system parameters
-    auto set_userframe_service = node->create_service<jaka_msgs::srv::SetUserFrame>("/jaka_driver/set_userframe", &set_userFrame_callback);
+    auto set_userframe_service = node->create_service<jaka_msgs::srv::SetUserFrame>("/jaka_driver/set_userframe", &set_userFrame_callback, rmw_qos_profile_services_default, sdk_callback_group);
     //2.3 Set the center of gravity parameters of the robot arm load
-    auto set_payload_service = node->create_service<jaka_msgs::srv::SetPayload>("/jaka_driver/set_payload", &set_payload_callback);
+    auto set_payload_service = node->create_service<jaka_msgs::srv::SetPayload>("/jaka_driver/set_payload", &set_payload_callback, rmw_qos_profile_services_default, sdk_callback_group);
     //2.4 Set free drive mode
-    auto drag_move_service = node->create_service<std_srvs::srv::SetBool>("/jaka_driver/drag_move", &drag_mode_callback);
+    auto drag_move_service = node->create_service<std_srvs::srv::SetBool>("/jaka_driver/drag_move", &drag_mode_callback, rmw_qos_profile_services_default, sdk_callback_group);
     //2.5 Set collision sensitivity
-    auto set_collisionlevel_service = node->create_service<jaka_msgs::srv::SetCollision>("/jaka_driver/set_collisionlevel", &set_collisionLevel_callback);
+    auto set_collisionlevel_service = node->create_service<jaka_msgs::srv::SetCollision>("/jaka_driver/set_collisionlevel", &set_collisionLevel_callback, rmw_qos_profile_services_default, sdk_callback_group);
     //2.6 Set IO
-    auto set_io_service = node->create_service<jaka_msgs::srv::SetIO>("jaka_driver/set_io",&set_io_callback);
+    auto set_io_service = node->create_service<jaka_msgs::srv::SetIO>("jaka_driver/set_io",&set_io_callback, rmw_qos_profile_services_default, sdk_callback_group);
     //2.7 Get IO
-    auto get_io_service = node->create_service<jaka_msgs::srv::GetIO>("jaka_driver/get_io",&get_io_callback);
+    auto get_io_service = node->create_service<jaka_msgs::srv::GetIO>("jaka_driver/get_io",&get_io_callback, rmw_qos_profile_services_default, sdk_callback_group);
     //2.8 Find the positive solution
-    auto get_fk_service = node->create_service<jaka_msgs::srv::GetFK>("jaka_driver/get_fk", &get_fk_callback);
+    auto get_fk_service = node->create_service<jaka_msgs::srv::GetFK>("jaka_driver/get_fk", &get_fk_callback, rmw_qos_profile_services_default, sdk_callback_group);
     //2.9 Find the inverse solution
-    auto get_ik_service = node->create_service<jaka_msgs::srv::GetIK>("jaka_driver/get_ik", &get_ik_callback);
+    auto get_ik_service = node->create_service<jaka_msgs::srv::GetIK>("jaka_driver/get_ik", &get_ik_callback, rmw_qos_profile_services_default, sdk_callback_group);
 
     // //3.1 End position pose status information reporting
     tool_position_pub = node->create_publisher<geometry_msgs::msg::TwistStamped>("/jaka_driver/tool_position", 10);
@@ -971,19 +1248,35 @@ int main(int argc, char *argv[])
     robot_state_pub = node->create_publisher<jaka_msgs::msg::RobotMsg>("/jaka_driver/robot_states", 10);
     
     // Automatically stop robot jog and motion
-    auto stop_jog = node->create_wall_timer(chrono::seconds(3), stop_jog_callback);
+    auto stop_jog = node->create_wall_timer(chrono::seconds(3), stop_jog_callback, sdk_callback_group);
+
+    // Robot lifecycle management services
+    auto login_service = node->create_service<std_srvs::srv::Trigger>("/jaka_driver/login", &login_callback, rmw_qos_profile_services_default, sdk_callback_group);
+    auto power_on_service = node->create_service<std_srvs::srv::Trigger>("/jaka_driver/power_on", &power_on_callback, rmw_qos_profile_services_default, sdk_callback_group);
+    auto enable_robot_service = node->create_service<std_srvs::srv::Trigger>("/jaka_driver/enable_robot", &enable_robot_callback, rmw_qos_profile_services_default, sdk_callback_group);
+    auto disable_robot_service = node->create_service<std_srvs::srv::Trigger>("/jaka_driver/disable_robot", &disable_robot_callback, rmw_qos_profile_services_default, interrupt_callback_group);
+    auto power_off_service = node->create_service<std_srvs::srv::Trigger>("/jaka_driver/power_off", &power_off_callback, rmw_qos_profile_services_default, sdk_callback_group);
+    auto logout_service = node->create_service<std_srvs::srv::Trigger>("/jaka_driver/logout", &logout_callback, rmw_qos_profile_services_default, sdk_callback_group);
 
     // Monitor network connection status
     thread conn_state_thread(get_conn_scoket_state);
 
     RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "start");
 
-    rclcpp::spin(node);
+    // rclcpp::spin(node);
+    rclcpp::executors::MultiThreadedExecutor executor(
+        rclcpp::ExecutorOptions(),
+        3);
+
+    executor.add_node(node);
+    executor.spin();
+
+    rclcpp::shutdown();
+
      // Ensure thread is joined before shutting down the node
     if (conn_state_thread.joinable()) {
         conn_state_thread.join();
     }
 
-    rclcpp::shutdown();
     return 0;
 }

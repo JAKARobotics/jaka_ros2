@@ -17,9 +17,9 @@ find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(jaka_msgs REQUIRED)
-# find_package(moveit_msgs REQUIRED)
 find_package(action_msgs REQUIRED)
 find_package(control_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 
 # Optionally find additional dependencies
 # find_package(Boost REQUIRED)
@@ -37,10 +37,10 @@ add_executable(servoj_demo src/servoj_demo.cpp)
 ament_target_dependencies(jaka_driver
   rclcpp
   std_msgs
+  std_srvs
   geometry_msgs
   sensor_msgs
   jaka_msgs
-  # moveit_msgs
   action_msgs
   control_msgs
 )
@@ -50,7 +50,6 @@ ament_target_dependencies(sdk_test
   geometry_msgs
   sensor_msgs
   jaka_msgs
-  # moveit_msgs
   action_msgs
 )
 ament_target_dependencies(client
@@ -59,7 +58,6 @@ ament_target_dependencies(client
   geometry_msgs
   sensor_msgs
   jaka_msgs
-  # moveit_msgs
   action_msgs
   control_msgs
 )
@@ -69,7 +67,6 @@ ament_target_dependencies(servoj_demo
   geometry_msgs
   sensor_msgs
   jaka_msgs
-  # moveit_msgs
   action_msgs
 )
 
