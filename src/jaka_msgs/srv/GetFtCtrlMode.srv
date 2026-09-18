@@ -1,0 +1,4 @@
+---
+int16 ret
+string message
+bool enable

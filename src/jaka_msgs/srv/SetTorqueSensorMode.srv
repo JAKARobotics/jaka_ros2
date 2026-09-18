@@ -1,0 +1,5 @@
+# 0 disabled, 1 enabled.
+int32 sensor_mode
+---
+int16 ret
+string message

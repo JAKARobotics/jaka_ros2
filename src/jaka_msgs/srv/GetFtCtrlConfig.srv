@@ -1,0 +1,11 @@
+---
+int16 ret
+string message
+# Parallel arrays containing the six SDK AdmitCtrlType entries.
+# Axis IDs 0..5 correspond to x, y, z, Rx, Ry, Rz.
+int32[6] axis
+int32[6] opt
+float64[6] ft_user
+float64[6] ft_rebound
+float64[6] ft_constant
+int32[6] ft_normal_track

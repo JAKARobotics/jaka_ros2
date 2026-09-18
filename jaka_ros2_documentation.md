@@ -500,6 +500,55 @@ The lifecycle services use the `std_srvs/srv/Trigger` service type and return a 
 - **/jaka_driver/get_fk** - Computes forward kinematics.
 - **/jaka_driver/get_ik** - Computes inverse kinematics.
 
+#### Force Sensor & Force Control Services
+
+The following 12 services wrap the corresponding SDK interfaces. All names below
+are prefixed with `/jaka_driver/`, and all types with `jaka_msgs/srv/`.
+
+| Service | Type | Purpose |
+|---|---|---|
+| `get_torque_sensor_data` | `GetTorqueSensorData` | Read six-axis force/torque and sensor status/error. |
+| `get_torque_sensor_mode` | `GetTorqueSensorMode` | Read whether the sensor is enabled. |
+| `set_torque_sensor_mode` | `SetTorqueSensorMode` | Disable (`sensor_mode: 0`) or enable (`1`) the sensor. |
+| `get_torque_sensor_comm` | `GetTorqueSensorComm` | Read sensor communication settings. |
+| `set_torque_sensor_comm` | `SetTorqueSensorComm` | Set communication `type` (`0` TCP/IP, `1` RS485), `ip_addr`, and `port`. |
+| `get_ft_ctrl_mode` | `GetFtCtrlMode` | Read force-control enable state. |
+| `set_ft_ctrl_mode` | `SetFtCtrlMode` | Enable/disable force control using `enable`. |
+| `get_ft_ctrl_config` | `GetFtCtrlConfig` | Read all six axes' admittance configurations as parallel arrays. |
+| `set_ft_ctrl_config` | `SetFtCtrlConfig` | Set one axis' admittance configuration. |
+| `get_ft_ctrl_frame` | `GetFtCtrlFrame` | Read the force-control frame. |
+| `set_ft_ctrl_frame` | `SetFtCtrlFrame` | Set `ft_frame` to `0` (tool) or `1` (world). |
+| `disable_force_control` | `DisableForceControl` | Call the SDK's force-control disable operation. |
+
+Log in first using `/jaka_driver/login`. Like the other non-lifecycle services,
+every response includes `ret` (`1` for success, `0` for failure) and `message`.
+The callbacks rely on the SDK to report login errors. Only use returned data
+when `ret` is `1`; this indicates API success, not sensor health. Check
+`sensor_status` and `sensor_error_code` separately for readings.
+
+For readings, `type` is `1` (actual feedback), `2` (raw), or `3` (gravity/bias
+compensated), following the API documentation rather than the conflicting
+zero-based `TorqueDataType` enum in `jktypes.h`. Confirm support with your
+SDK/controller version. `wrench` is `[fx, fy, fz, tx, ty, tz]`, in N and N·m;
+these are end-sensor readings, not joint torques.
+
+`set_ft_ctrl_config` takes `axis` (`0..5`: x, y, z, Rx, Ry, Rz), `opt` (`0` off,
+`1` on), `ft_user` (force/torque associated with maximum speed), `ft_rebound`
+(return-to-initial-position strength), and `ft_constant` (constant force/torque).
+The deprecated `ft_normal_track` must remain `0`. Getter arrays preserve the
+SDK entries, with matching indices across fields.
+
+These services use the existing normal SDK callback group, so they wait while a
+blocking motion service runs. `disable_force_control` is not an emergency-stop
+service. Force-control changes can affect robot motion; configure them only
+under appropriate operating conditions. IP/port settings apply only to TCP/IP.
+
+Example reading request:
+
+```bash
+ros2 service call /jaka_driver/get_torque_sensor_data jaka_msgs/srv/GetTorqueSensorData "{type: 3}"
+```
+
 ### 3.2.3 Topics
 
 The `jaka_driver` node publishes real-time robot status updates through the following topics while the SDK is logged in:

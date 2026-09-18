@@ -1,0 +1,9 @@
+# SDK selectors: 1 actual feedback, 2 raw, 3 gravity/bias compensated.
+int32 type
+---
+int16 ret
+string message
+int32 sensor_status
+int32 sensor_error_code
+# [fx, fy, fz, tx, ty, tz]; force in N, torque in N*m.
+float64[6] wrench

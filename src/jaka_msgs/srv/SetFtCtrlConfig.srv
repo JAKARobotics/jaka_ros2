@@ -1,0 +1,12 @@
+# Configure one axis: 0..5 correspond to x, y, z, Rx, Ry, Rz.
+int32 axis
+# 0 disabled, 1 enabled.
+int32 opt
+float64 ft_user
+float64 ft_rebound
+float64 ft_constant
+# Deprecated SDK option; must be 0.
+int32 ft_normal_track
+---
+int16 ret
+string message

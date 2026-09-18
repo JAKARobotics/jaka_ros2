@@ -34,6 +34,18 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ClearError.srv"
   "srv/GetFK.srv"
   "srv/GetIK.srv"
+  "srv/GetTorqueSensorData.srv"
+  "srv/GetTorqueSensorMode.srv"
+  "srv/SetTorqueSensorMode.srv"
+  "srv/GetTorqueSensorComm.srv"
+  "srv/SetTorqueSensorComm.srv"
+  "srv/GetFtCtrlMode.srv"
+  "srv/SetFtCtrlMode.srv"
+  "srv/GetFtCtrlConfig.srv"
+  "srv/SetFtCtrlConfig.srv"
+  "srv/GetFtCtrlFrame.srv"
+  "srv/SetFtCtrlFrame.srv"
+  "srv/DisableForceControl.srv"
    DEPENDENCIES std_msgs std_srvs
 )
 
@@ -57,4 +69,3 @@ ament_package()
   # set(ament_cmake_cpplint_FOUND TRUE)
   # ament_lint_auto_find_test_dependencies()
 # endif()
-

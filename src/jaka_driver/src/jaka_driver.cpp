@@ -24,6 +24,18 @@
 #include "jaka_msgs/srv/get_fk.hpp"
 #include "jaka_msgs/srv/get_ik.hpp"
 #include "jaka_msgs/srv/clear_error.hpp"
+#include "jaka_msgs/srv/get_torque_sensor_data.hpp"
+#include "jaka_msgs/srv/get_torque_sensor_mode.hpp"
+#include "jaka_msgs/srv/set_torque_sensor_mode.hpp"
+#include "jaka_msgs/srv/get_torque_sensor_comm.hpp"
+#include "jaka_msgs/srv/set_torque_sensor_comm.hpp"
+#include "jaka_msgs/srv/get_ft_ctrl_mode.hpp"
+#include "jaka_msgs/srv/set_ft_ctrl_mode.hpp"
+#include "jaka_msgs/srv/get_ft_ctrl_config.hpp"
+#include "jaka_msgs/srv/set_ft_ctrl_config.hpp"
+#include "jaka_msgs/srv/get_ft_ctrl_frame.hpp"
+#include "jaka_msgs/srv/set_ft_ctrl_frame.hpp"
+#include "jaka_msgs/srv/disable_force_control.hpp"
 
 #include "jaka_driver/JAKAZuRobot.h"
 #include "jaka_driver/jkerr.h"
@@ -40,6 +52,7 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
+#include <cmath>
 using namespace std;
 
 const double PI = 3.1415926;
@@ -363,7 +376,6 @@ void stop_move_callback(
     return;
 }
 
-
 bool set_toolFrame_callback(const shared_ptr<jaka_msgs::srv::SetTcpFrame::Request> request,
     shared_ptr<jaka_msgs::srv::SetTcpFrame::Response> response)
 {
@@ -401,7 +413,6 @@ bool set_toolFrame_callback(const shared_ptr<jaka_msgs::srv::SetTcpFrame::Reques
     }
     return true;
 }
-
 
 bool set_userFrame_callback(const shared_ptr<jaka_msgs::srv::SetUserFrame::Request> request,
     shared_ptr<jaka_msgs::srv::SetUserFrame::Response> response)
@@ -536,7 +547,6 @@ bool set_collisionLevel_callback(const shared_ptr<jaka_msgs::srv::SetCollision::
     return true;
 }
 
-
 bool set_io_callback(const shared_ptr<jaka_msgs::srv::SetIO::Request> request,
     shared_ptr<jaka_msgs::srv::SetIO::Response> response)
 {   
@@ -597,8 +607,6 @@ bool set_io_callback(const shared_ptr<jaka_msgs::srv::SetIO::Request> request,
     }
     return true;
 }
-
-
 
 bool get_io_callback(const shared_ptr<jaka_msgs::srv::GetIO::Request> request,
     shared_ptr<jaka_msgs::srv::GetIO::Response> response)
@@ -785,7 +793,6 @@ bool get_ik_callback(const shared_ptr<jaka_msgs::srv::GetIK::Request> request,
 
 }
 
-
 /*
 bool clear_error_callback(const shared_ptr<jaka_msgs::srv::ClearError::Request> request,
     shared_ptr<jaka_msgs::srv::ClearError::Response> response)
@@ -794,6 +801,308 @@ bool clear_error_callback(const shared_ptr<jaka_msgs::srv::ClearError::Request> 
     return true;
 }
 */
+
+bool get_torque_sensor_data_callback(
+    const shared_ptr<jaka_msgs::srv::GetTorqueSensorData::Request> request,
+    shared_ptr<jaka_msgs::srv::GetTorqueSensorData::Response> response)
+{
+    // The API documents 1..3; TorqueDataType in jktypes.h instead uses 0..2.
+    if (request->type < 1 || request->type > 3)
+    {
+        response->ret = 0;
+        response->message = "type must be 1, 2, or 3";
+        return false;
+    }
+    TorqSensorData data{};
+    int ret = robot.get_torque_sensor_data(request->type, &data);
+    switch(ret)
+    {
+        case 0:
+            response->ret = 1;
+            response->message = "get_torque_sensor_data has been executed";
+            break;
+        default:
+            response->ret = 0;
+            response->message = "error occurred:" + mapErr[ret];
+            return false;
+    }
+    response->sensor_status = data.status;
+    response->sensor_error_code = data.errorCode;
+    response->wrench = {data.data.fx, data.data.fy, data.data.fz,
+                       data.data.tx, data.data.ty, data.data.tz};
+    return true;
+}
+
+bool get_torque_sensor_mode_callback(
+    const shared_ptr<jaka_msgs::srv::GetTorqueSensorMode::Request>,
+    shared_ptr<jaka_msgs::srv::GetTorqueSensorMode::Response> response)
+{
+    int mode = 0;
+    int ret = robot.get_torque_sensor_mode(&mode);
+    switch(ret)
+    {
+        case 0:
+            response->ret = 1;
+            response->message = "get_torque_sensor_mode has been executed";
+            break;
+        default:
+            response->ret = 0;
+            response->message = "error occurred:" + mapErr[ret];
+            return false;
+    }
+    response->sensor_mode = mode;
+    return true;
+}
+
+bool set_torque_sensor_mode_callback(
+    const shared_ptr<jaka_msgs::srv::SetTorqueSensorMode::Request> request,
+    shared_ptr<jaka_msgs::srv::SetTorqueSensorMode::Response> response)
+{
+    if (request->sensor_mode != 0 && request->sensor_mode != 1)
+    {
+        response->ret = 0;
+        response->message = "sensor_mode must be 0 or 1";
+        return false;
+    }
+    int ret = robot.set_torque_sensor_mode(request->sensor_mode);
+    switch(ret)
+    {
+        case 0:
+            response->ret = 1;
+            response->message = "set_torque_sensor_mode has been executed";
+            break;
+        default:
+            response->ret = 0;
+            response->message = "error occurred:" + mapErr[ret];
+            return false;
+    }
+    return true;
+}
+
+bool get_torque_sensor_comm_callback(
+    const shared_ptr<jaka_msgs::srv::GetTorqueSensorComm::Request>,
+    shared_ptr<jaka_msgs::srv::GetTorqueSensorComm::Response> response)
+{
+    int type = 0;
+    char ip_addr[64]{};
+    int port = 0;
+    int ret = robot.get_torque_sensor_comm(&type, ip_addr, &port);
+    switch(ret)
+    {
+        case 0:
+            response->ret = 1;
+            response->message = "get_torque_sensor_comm has been executed";
+            break;
+        default:
+            response->ret = 0;
+            response->message = "error occurred:" + mapErr[ret];
+            return false;
+    }
+    response->type = type;
+    response->ip_addr = ip_addr;
+    response->port = port;
+    return true;
+}
+
+bool set_torque_sensor_comm_callback(
+    const shared_ptr<jaka_msgs::srv::SetTorqueSensorComm::Request> request,
+    shared_ptr<jaka_msgs::srv::SetTorqueSensorComm::Response> response)
+{
+    if ((request->type != 0 && request->type != 1) ||
+        (request->type == 0 && (request->ip_addr.empty() ||
+         request->ip_addr.find('\0') != std::string::npos ||
+         request->port < 1 || request->port > 65535)))
+    {
+        response->ret = 0;
+        response->message = "type must be 0 or 1; TCP/IP requires an IP address and port 1..65535";
+        return false;
+    }
+    int ret = robot.set_torque_sensor_comm(
+        request->type, request->ip_addr.c_str(), request->port);
+    switch(ret)
+    {
+        case 0:
+            response->ret = 1;
+            response->message = "set_torque_sensor_comm has been executed";
+            break;
+        default:
+            response->ret = 0;
+            response->message = "error occurred:" + mapErr[ret];
+            return false;
+    }
+    return true;
+}
+
+bool get_ft_ctrl_mode_callback(
+    const shared_ptr<jaka_msgs::srv::GetFtCtrlMode::Request>,
+    shared_ptr<jaka_msgs::srv::GetFtCtrlMode::Response> response)
+{
+    BOOL enable = FALSE;
+    int ret = robot.get_ft_ctrl_mode(&enable);
+    switch(ret)
+    {
+        case 0:
+            response->ret = 1;
+            response->message = "get_ft_ctrl_mode has been executed";
+            break;
+        default:
+            response->ret = 0;
+            response->message = "error occurred:" + mapErr[ret];
+            return false;
+    }
+    response->enable = (enable != FALSE);
+    return true;
+}
+
+bool set_ft_ctrl_mode_callback(
+    const shared_ptr<jaka_msgs::srv::SetFtCtrlMode::Request> request,
+    shared_ptr<jaka_msgs::srv::SetFtCtrlMode::Response> response)
+{
+    int ret = robot.set_ft_ctrl_mode(request->enable ? TRUE : FALSE);
+    switch(ret)
+    {
+        case 0:
+            response->ret = 1;
+            response->message = "set_ft_ctrl_mode has been executed";
+            break;
+        default:
+            response->ret = 0;
+            response->message = "error occurred:" + mapErr[ret];
+            return false;
+    }
+    return true;
+}
+
+bool get_ft_ctrl_config_callback(
+    const shared_ptr<jaka_msgs::srv::GetFtCtrlConfig::Request>,
+    shared_ptr<jaka_msgs::srv::GetFtCtrlConfig::Response> response)
+{
+    RobotAdmitCtrl cfg{};
+    int ret = robot.get_ft_ctrl_config(&cfg);
+    switch(ret)
+    {
+        case 0:
+            response->ret = 1;
+            response->message = "get_ft_ctrl_config has been executed";
+            break;
+        default:
+            response->ret = 0;
+            response->message = "error occurred:" + mapErr[ret];
+            return false;
+    }
+    for (size_t i = 0; i < 6; ++i)
+    {
+        const auto &axis_cfg = cfg.admit_ctrl[i];
+        response->axis[i] = axis_cfg.axis;
+        response->opt[i] = axis_cfg.opt;
+        response->ft_user[i] = axis_cfg.ft_user;
+        response->ft_rebound[i] = axis_cfg.ft_rebound;
+        response->ft_constant[i] = axis_cfg.ft_constant;
+        response->ft_normal_track[i] = axis_cfg.ft_normal_track;
+    }
+    return true;
+}
+
+bool set_ft_ctrl_config_callback(
+    const shared_ptr<jaka_msgs::srv::SetFtCtrlConfig::Request> request,
+    shared_ptr<jaka_msgs::srv::SetFtCtrlConfig::Response> response)
+{
+    if (request->axis < 0 || request->axis > 5 ||
+        (request->opt != 0 && request->opt != 1) || request->ft_normal_track != 0 ||
+        !std::isfinite(request->ft_user) || !std::isfinite(request->ft_rebound) ||
+        !std::isfinite(request->ft_constant))
+    {
+        response->ret = 0;
+        response->message = "axis must be 0..5, opt 0 or 1, ft_normal_track 0, and values finite";
+        return false;
+    }
+    AdmitCtrlType cfg{};
+    cfg.axis = request->axis;
+    cfg.opt = request->opt;
+    cfg.ft_user = request->ft_user;
+    cfg.ft_rebound = request->ft_rebound;
+    cfg.ft_constant = request->ft_constant;
+    cfg.ft_normal_track = request->ft_normal_track;
+    int ret = robot.set_ft_ctrl_config(cfg);
+    switch(ret)
+    {
+        case 0:
+            response->ret = 1;
+            response->message = "set_ft_ctrl_config has been executed";
+            break;
+        default:
+            response->ret = 0;
+            response->message = "error occurred:" + mapErr[ret];
+            return false;
+    }
+    return true;
+}
+
+bool get_ft_ctrl_frame_callback(
+    const shared_ptr<jaka_msgs::srv::GetFtCtrlFrame::Request>,
+    shared_ptr<jaka_msgs::srv::GetFtCtrlFrame::Response> response)
+{
+    FTFrameType frame = FTFrame_Tool;
+    int ret = robot.get_ft_ctrl_frame(&frame);
+    switch(ret)
+    {
+        case 0:
+            response->ret = 1;
+            response->message = "get_ft_ctrl_frame has been executed";
+            break;
+        default:
+            response->ret = 0;
+            response->message = "error occurred:" + mapErr[ret];
+            return false;
+    }
+    response->ft_frame = static_cast<int>(frame);
+    return true;
+}
+
+bool set_ft_ctrl_frame_callback(
+    const shared_ptr<jaka_msgs::srv::SetFtCtrlFrame::Request> request,
+    shared_ptr<jaka_msgs::srv::SetFtCtrlFrame::Response> response)
+{
+    if (request->ft_frame != 0 && request->ft_frame != 1)
+    {
+        response->ret = 0;
+        response->message = "ft_frame must be 0 (tool) or 1 (world)";
+        return false;
+    }
+    int ret = robot.set_ft_ctrl_frame(
+        static_cast<FTFrameType>(request->ft_frame));
+    switch(ret)
+    {
+        case 0:
+            response->ret = 1;
+            response->message = "set_ft_ctrl_frame has been executed";
+            break;
+        default:
+            response->ret = 0;
+            response->message = "error occurred:" + mapErr[ret];
+            return false;
+    }
+    return true;
+}
+
+bool disable_force_control_callback(
+    const shared_ptr<jaka_msgs::srv::DisableForceControl::Request>,
+    shared_ptr<jaka_msgs::srv::DisableForceControl::Response> response)
+{
+    int ret = robot.disable_force_control();
+    switch(ret)
+    {
+        case 0:
+            response->ret = 1;
+            response->message = "disable_force_control has been executed";
+            break;
+        default:
+            response->ret = 0;
+            response->message = "error occurred:" + mapErr[ret];
+            return false;
+    }
+    return true;
+}
 
 void tool_position_callback(const rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr& tool_position_pub)
 {
@@ -1207,44 +1516,58 @@ int main(int argc, char *argv[])
     // Interrupt services must run independently of blocking motion.
     auto interrupt_callback_group = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
-    //1.1 Linear motion (in customized user coordinate system)
+    // Linear motion (in customized user coordinate system)
     auto linear_move_service = node->create_service<jaka_msgs::srv::Move>("/jaka_driver/linear_move", &linear_move_callback,  rmw_qos_profile_services_default, sdk_callback_group);
-    //1.2 Joint motion
+    // Joint motion
     auto joint_move_service = node->create_service<jaka_msgs::srv::Move>("/jaka_driver/joint_move", &joint_move_callback, rmw_qos_profile_services_default, sdk_callback_group);
-    //1.3 Jog motion
+    // Jog motion
     auto jog_service = node->create_service<jaka_msgs::srv::Move>("/jaka_driver/jog", &jog_callback, rmw_qos_profile_services_default, sdk_callback_group);
-    //1.4 Servo Position Control Mode Enable
+    // Servo Position Control Mode Enable
     auto servo_move_enable_service = node->create_service<jaka_msgs::srv::ServoMoveEnable>("/jaka_driver/servo_move_enable", &servo_move_enable_callback, rmw_qos_profile_services_default, sdk_callback_group);
-    //1.5 Servo-mode motion in Cartesian space
+    // Servo-mode motion in Cartesian space
     auto servo_p_service = node->create_service<jaka_msgs::srv::ServoMove>("/jaka_driver/servo_p", &servo_p_callback, rmw_qos_profile_services_default, sdk_callback_group);
-    //1.6 Joint space servo mode motion
+    // Joint space servo mode motion
     auto servo_j_service = node->create_service<jaka_msgs::srv::ServoMove>("/jaka_driver/servo_j", &servo_j_callback, rmw_qos_profile_services_default, sdk_callback_group);
-    //1.7 stop motion
+    // stop motion
     auto stop_move_service = node->create_service<std_srvs::srv::Trigger>("/jaka_driver/stop_move", &stop_move_callback, rmw_qos_profile_services_default, interrupt_callback_group);
-    //2.1 Setting tcp parameters
+    // Setting tcp parameters
     auto set_toolframe_service = node->create_service<jaka_msgs::srv::SetTcpFrame>("/jaka_driver/set_toolframe", &set_toolFrame_callback, rmw_qos_profile_services_default, sdk_callback_group);
-    //2.2 Setting user coordinate system parameters
+    // Setting user coordinate system parameters
     auto set_userframe_service = node->create_service<jaka_msgs::srv::SetUserFrame>("/jaka_driver/set_userframe", &set_userFrame_callback, rmw_qos_profile_services_default, sdk_callback_group);
-    //2.3 Set the center of gravity parameters of the robot arm load
+    // Set the center of gravity parameters of the robot arm load
     auto set_payload_service = node->create_service<jaka_msgs::srv::SetPayload>("/jaka_driver/set_payload", &set_payload_callback, rmw_qos_profile_services_default, sdk_callback_group);
-    //2.4 Set free drive mode
+    // Set free drive mode
     auto drag_move_service = node->create_service<std_srvs::srv::SetBool>("/jaka_driver/drag_move", &drag_mode_callback, rmw_qos_profile_services_default, sdk_callback_group);
-    //2.5 Set collision sensitivity
+    // Set collision sensitivity
     auto set_collisionlevel_service = node->create_service<jaka_msgs::srv::SetCollision>("/jaka_driver/set_collisionlevel", &set_collisionLevel_callback, rmw_qos_profile_services_default, sdk_callback_group);
-    //2.6 Set IO
+    // Set IO
     auto set_io_service = node->create_service<jaka_msgs::srv::SetIO>("jaka_driver/set_io",&set_io_callback, rmw_qos_profile_services_default, sdk_callback_group);
-    //2.7 Get IO
+    // Get IO
     auto get_io_service = node->create_service<jaka_msgs::srv::GetIO>("jaka_driver/get_io",&get_io_callback, rmw_qos_profile_services_default, sdk_callback_group);
-    //2.8 Find the positive solution
+    // The positive solution
     auto get_fk_service = node->create_service<jaka_msgs::srv::GetFK>("jaka_driver/get_fk", &get_fk_callback, rmw_qos_profile_services_default, sdk_callback_group);
-    //2.9 Find the inverse solution
+    // Find the inverse solution
     auto get_ik_service = node->create_service<jaka_msgs::srv::GetIK>("jaka_driver/get_ik", &get_ik_callback, rmw_qos_profile_services_default, sdk_callback_group);
 
-    // //3.1 End position pose status information reporting
+    // Force-sensor and force-control SDK services.
+    auto get_torque_sensor_data_service = node->create_service<jaka_msgs::srv::GetTorqueSensorData>("/jaka_driver/get_torque_sensor_data", &get_torque_sensor_data_callback, rmw_qos_profile_services_default, sdk_callback_group);
+    auto get_torque_sensor_mode_service = node->create_service<jaka_msgs::srv::GetTorqueSensorMode>("/jaka_driver/get_torque_sensor_mode", &get_torque_sensor_mode_callback, rmw_qos_profile_services_default, sdk_callback_group);
+    auto set_torque_sensor_mode_service = node->create_service<jaka_msgs::srv::SetTorqueSensorMode>("/jaka_driver/set_torque_sensor_mode", &set_torque_sensor_mode_callback, rmw_qos_profile_services_default, sdk_callback_group);
+    auto get_torque_sensor_comm_service = node->create_service<jaka_msgs::srv::GetTorqueSensorComm>("/jaka_driver/get_torque_sensor_comm", &get_torque_sensor_comm_callback, rmw_qos_profile_services_default, sdk_callback_group);
+    auto set_torque_sensor_comm_service = node->create_service<jaka_msgs::srv::SetTorqueSensorComm>("/jaka_driver/set_torque_sensor_comm", &set_torque_sensor_comm_callback, rmw_qos_profile_services_default, sdk_callback_group);
+    auto get_ft_ctrl_mode_service = node->create_service<jaka_msgs::srv::GetFtCtrlMode>("/jaka_driver/get_ft_ctrl_mode", &get_ft_ctrl_mode_callback, rmw_qos_profile_services_default, sdk_callback_group);
+    auto set_ft_ctrl_mode_service = node->create_service<jaka_msgs::srv::SetFtCtrlMode>("/jaka_driver/set_ft_ctrl_mode", &set_ft_ctrl_mode_callback, rmw_qos_profile_services_default, sdk_callback_group);
+    auto get_ft_ctrl_config_service = node->create_service<jaka_msgs::srv::GetFtCtrlConfig>("/jaka_driver/get_ft_ctrl_config", &get_ft_ctrl_config_callback, rmw_qos_profile_services_default, sdk_callback_group);
+    auto set_ft_ctrl_config_service = node->create_service<jaka_msgs::srv::SetFtCtrlConfig>("/jaka_driver/set_ft_ctrl_config", &set_ft_ctrl_config_callback, rmw_qos_profile_services_default, sdk_callback_group);
+    auto get_ft_ctrl_frame_service = node->create_service<jaka_msgs::srv::GetFtCtrlFrame>("/jaka_driver/get_ft_ctrl_frame", &get_ft_ctrl_frame_callback, rmw_qos_profile_services_default, sdk_callback_group);
+    auto set_ft_ctrl_frame_service = node->create_service<jaka_msgs::srv::SetFtCtrlFrame>("/jaka_driver/set_ft_ctrl_frame", &set_ft_ctrl_frame_callback, rmw_qos_profile_services_default, sdk_callback_group);
+    auto disable_force_control_service = node->create_service<jaka_msgs::srv::DisableForceControl>("/jaka_driver/disable_force_control", &disable_force_control_callback, rmw_qos_profile_services_default, sdk_callback_group);
+
+    // End position pose status information reporting
     tool_position_pub = node->create_publisher<geometry_msgs::msg::TwistStamped>("/jaka_driver/tool_position", 10);
-    // //3.2 Joint status information reporting
+    // Joint status information reporting
     joint_position_pub = node->create_publisher<sensor_msgs::msg::JointState>("/jaka_driver/joint_position", 10);
-    // //3.3 Report robot event status information
+    // Report robot event status information
     robot_state_pub = node->create_publisher<jaka_msgs::msg::RobotMsg>("/jaka_driver/robot_states", 10);
     
     // Automatically stop robot jog and motion

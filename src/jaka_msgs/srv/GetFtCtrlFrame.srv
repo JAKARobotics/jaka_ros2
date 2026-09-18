@@ -1,0 +1,5 @@
+---
+int16 ret
+string message
+# 0 tool frame, 1 world frame.
+int32 ft_frame

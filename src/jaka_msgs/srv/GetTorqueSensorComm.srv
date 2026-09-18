@@ -1,0 +1,7 @@
+---
+int16 ret
+string message
+# 0 TCP/IP, 1 RS485; IP and port apply only to TCP/IP.
+int32 type
+string ip_addr
+int32 port
