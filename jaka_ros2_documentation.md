@@ -863,21 +863,16 @@ ros2 run jaka_driver sdk_test --ros-args -p ip:=<robot_ip>
 
 MoveIt 2 is a powerful motion planning framework that enables trajectory planning and execution for robotic arms. While the updated `jaka_ros2` package now supports **Gazebo simulation** for real-time trajectory execution, it still provides an **RViz-based simulation mode** for cases where Gazebo cannot be used due to system limitations, hardware constraints, or other requirements.
 
-To enable this RViz simulation mode, modifications are required in the `launches.py` file that comes with the default MoveIt 2 package installation. The `jaka_ros2` package provides an adjusted version of this file, which users can replace in their system to achieve the desired functionality. 
+The RViz simulation mode uses the shared JAKA launch helpers in [jaka_moveit_launches](./src/jaka_moveit_launches/jaka_moveit_launches/launches.py). Build and source this workspace to use them; the MoveIt 2 installation does not need to be modified.
+If you previously replaced MoveIt's `launches.py` manually, restore the original file for your installed MoveIt version; `jaka_moveit_launches` now provides the required custom launch behavior.
 
-The key modification made to `launches.py` is the addition of the `use_rviz_sim` parameter. When set to `true`, this parameter enables simulation mode. By default, `use_rviz_sim` is set to `false`.
+The shared helper adds the `use_rviz_sim` parameter. When set to `true`, this parameter enables simulation mode. By default, `use_rviz_sim` is set to `false`.
+Real-robot and RViz-only launches use system time by default.
 
 ### 4.2.1 Setting Up MoveIt 2 with JAKA Robot (RViz Simulation)
 
 1) Ensure that **MoveIt 2** and the `jaka_ros2` package are properly installed.  
-2) Replace the default `launches.py` file with the modified version provided in the `jaka_ros2` package ([launches.py](./launches.py)). You can use the `find` command to locate `launches.py` in the MoveIt 2 installation directory as shown below.
-
-  <figure id="figure-4-13">
-    <img src="images/Figure 4-13: Locate launches.py.png" alt="Locate launches.py">
-    <figcaption>
-      <p align="center"><strong>Figure 4-13: Locate launches.py Command Output</strong></p>
-    </figcaption>
-  </figure>
+2) Build the workspace with `colcon build --symlink-install`, then source `install/setup.bash`. The shared launch helper is installed with the workspace.
 
 3) Launch MoveIt 2 in RViz simulation mode using the following command:  
 ```bash
@@ -912,15 +907,16 @@ This approach allows users to perform trajectory planning and execution within t
 
 Gazebo is a powerful simulation environment that provides realistic physics and visualizations for robotics applications. In this section, we demonstrate how to use Gazebo with the `jaka_ros2` package to simulate real-time trajectory planning and execution in a simulation environment.
 
-Similar to the RViz simulation described in [Section 4.2](#42-moveit-2-tutorial-planning-and-execution), this tutorial uses customized launch files (i.e., a modified `launches.py`). The key modification made to [launches.py](./launches.py) is the addition of functions used to independently launch Gazebo for model visualization and to launch an integrated Gazebo simulation environment with RViz.
+Similar to the RViz simulation described in [Section 4.2](#42-moveit-2-tutorial-planning-and-execution), this tutorial uses the shared [JAKA launch helpers](./src/jaka_moveit_launches/jaka_moveit_launches/launches.py) for Gazebo model visualization and integrated Gazebo simulation with RViz.
+Gazebo launches use a robot-specific clock topic (for example, `/jaka_pro5/clock`), so another simulator publishing `/clock` cannot reset JAKA simulation time.
 
 ### 4.3.1 Setting Up Gazebo Simulation with JAKA ROS2
 
 **1) Ensure required packages are installed:**  
-   Before proceeding, make sure that **Gazebo Ignition Fortress** and the `jaka_ros2` package are properly installed.
+   Before proceeding, make sure that **Gazebo Ignition Fortress**, `ros_gz_bridge`, and the `jaka_ros2` package are properly installed.
 
-**2) Update customized launch files:**  
-   Replace the default `launches.py` file with the customized version provided by the `jaka_ros2` package (details in [Section 4.2.1](#421-setting-up-moveit-2-with-jaka-robot-rviz-simulation)).
+**2) Build and source the workspace:**
+   Follow the workspace build step in [Section 4.2.1](#421-setting-up-moveit-2-with-jaka-robot-rviz-simulation).
 
 **3) Launch Gazebo for Model Visualization Only:**  
    To visualize the JAKA robot model in Gazebo, run the following command using the customized `gazebo.launch.py` file:  
@@ -1144,7 +1140,7 @@ To perform the test with gazebo simulation without a physical JAKA robot, omit t
 Run the following commands in separate terminals:  
 ```bash
 ros2 launch jaka_<robot_model>_moveit_config gazebo.launch.py
-ros2 run jaka_planner moveit_test --ros-args -p model:=<robot_model>
+ros2 run jaka_planner moveit_test --ros-args -p model:=<robot_model> -p use_sim_time:=true
 ```  
 
 > **Note:** Replace `<robot_model>` with the corresponding JAKA robot model.
@@ -1160,7 +1156,7 @@ ros2 run jaka_planner moveit_test --ros-args -p model:=<robot_model>
 Run the following commands in separate terminals:  
 ```bash
 ros2 launch jaka_<robot_model>_moveit_config demo_gazebo.launch.py
-ros2 run jaka_planner moveit_test --ros-args -p model:=<robot_model>
+ros2 run jaka_planner moveit_test --ros-args -p model:=<robot_model> -p use_sim_time:=true
 ```  
 
 > **Note:** Replace `<robot_model>` with the corresponding JAKA robot model.  

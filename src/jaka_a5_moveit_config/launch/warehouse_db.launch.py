@@ -1,5 +1,5 @@
 from moveit_configs_utils import MoveItConfigsBuilder
-from moveit_configs_utils.launches import generate_warehouse_db_launch
+from jaka_moveit_launches.launches import generate_warehouse_db_launch
 
 
 def generate_launch_description():

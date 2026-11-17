@@ -25,7 +25,6 @@ int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
     rclcpp::NodeOptions options;
-    options.parameter_overrides({rclcpp::Parameter("use_sim_time", true)});
     signal(SIGINT, sigintHandler);
     auto node = rclcpp::Node::make_shared("jaka_planner", options);
 

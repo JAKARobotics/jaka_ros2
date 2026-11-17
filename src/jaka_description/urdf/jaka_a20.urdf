@@ -468,6 +468,9 @@
   <gazebo>
     <!-- <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so"> -->
     <plugin name="ign_ros2_control::IgnitionROS2ControlPlugin" filename="libign_ros2_control-system.so">
+        <ros>
+            <remapping>/clock:=/jaka_a20/clock</remapping>
+        </ros>
     <!-- <plugin name="gz_ros2_control::GazeboSimROS2ControlPlugin" filename="gz_ros2_control-system">     -->
       <parameters>$(find jaka_a20_moveit_config)/config/ros2_controllers.yaml</parameters>
       <robotNamespace>/</robotNamespace>

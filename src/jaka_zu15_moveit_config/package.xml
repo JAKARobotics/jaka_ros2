@@ -36,6 +36,7 @@
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>jaka_description</exec_depend>
   <exec_depend>moveit_configs_utils</exec_depend>
+  <exec_depend>jaka_moveit_launches</exec_depend>
   <exec_depend>moveit_ros_move_group</exec_depend>
   <exec_depend>moveit_ros_visualization</exec_depend>
   <exec_depend>moveit_ros_warehouse</exec_depend>

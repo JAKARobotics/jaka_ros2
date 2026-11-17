@@ -657,20 +657,15 @@ ros2 run jaka_driver sdk_test --ros-args -p ip:=<robot_ip>
 ### MoveIt 2 教程：规划与执行
 MoveIt 2 是一个强大的运动规划框架，能够为机器人臂提供轨迹规划和执行。尽管更新后的 `jaka_ros2` 软件包现在支持 **Gazebo 仿真** 进行实时轨迹执行，但仍提供基于 **RViz 的仿真模式**，适用于由于系统限制、硬件约束或其他需求无法使用 Gazebo 的情况。
 
-为了启用该 RViz 仿真模式，需要对默认的 MoveIt 2 包安装中的 `launches.py` 文件进行修改。`jaka_ros2` 包提供了这个文件的调整版本，用户可以将其替换到系统中以实现所需功能。
+RViz 仿真模式使用工作区中的 [JAKA 共享启动辅助模块](./src/jaka_moveit_launches/jaka_moveit_launches/launches.py)。构建并加载工作区后即可使用，无需修改 MoveIt 2 的安装文件。
+如果您以前手动替换过 MoveIt 的 `launches.py`，请恢复与当前安装的 MoveIt 版本对应的原始文件；所需的自定义启动功能现在由 `jaka_moveit_launches` 辅助包提供。
 
-对 `launches.py` 文件的关键修改是添加了 `use_rviz_sim` 参数。当 `use_rviz_sim` 设置为 `true` 时，将启用仿真模式。默认情况下，`use_rviz_sim` 设置为 `false`。
+共享启动辅助模块添加了 `use_rviz_sim` 参数。当 `use_rviz_sim` 设置为 `true` 时，将启用仿真模式。默认情况下，`use_rviz_sim` 设置为 `false`。
+真实机器人和仅使用 RViz 的仿真默认使用系统时间。
 
 #### 设置 MoveIt 2 与 JAKA 机器人（RViz 仿真）
 (1) 确保 **MoveIt 2** 和 `jaka_ros2` 包已正确安装。  
-(2) 将默认的 `launches.py` 文件替换为 `jaka_ros2` 包中提供的修改版本（[launches.py](./launches.py)）。您可以使用 `find` 命令定位 MoveIt 2 安装目录中的 `launches.py` 文件，如下所示。
-
-  <figure id="figure-4-13">
-    <img src="images/Figure 4-13: Locate launches.py.png" alt="Locate launches.py">
-    <figcaption>
-      <p align="center"><strong>图 4-13：定位 launches.py 命令输出</strong></p>
-    </figcaption>
-  </figure>
+(2) 运行 `colcon build --symlink-install` 构建工作区，然后加载 `install/setup.bash`。共享启动辅助模块会随工作区一起安装。
 
 (3) 使用以下命令在 RViz 仿真模式下启动 MoveIt 2：  
 
@@ -705,15 +700,16 @@ ros2 launch jaka_<robot_model>_moveit_config demo.launch.py use_rviz_sim:=true
 
 ### Gazebo 仿真教程：在 Gazebo 中进行实时轨迹执行  
 Gazebo 是一个强大的仿真环境，提供逼真的物理和可视化效果，适用于机器人应用。在本节中，我们演示如何使用 Gazebo 与 `jaka_ros2` 包结合，在仿真环境中模拟实时轨迹规划和执行。  
-与[上一个节](#moveit-2-教程规划与执行) 中描述的 RViz 仿真类似，本教程使用了自定义的启动文件（即修改过的 `launches.py`）。对 [launches.py](./launches.py) 所做的主要修改是增加了用于独立启动 Gazebo 进行模型可视化的功能，并启动一个集成的 Gazebo 仿真环境与 RViz 配合使用。
+与[上一个节](#moveit-2-教程规划与执行) 中描述的 RViz 仿真类似，本教程使用 [JAKA 共享启动辅助模块](./src/jaka_moveit_launches/jaka_moveit_launches/launches.py) 来独立启动 Gazebo 进行模型可视化，或与 RViz 一起启动集成的 Gazebo 仿真环境。
+Gazebo 启动文件使用机器人专属时钟话题（例如 `/jaka_pro5/clock`），避免其他仿真器发布到 `/clock` 时重置 JAKA 仿真时间。
 
 #### 使用 JAKA ROS2 设置 Gazebo 仿真
 
 **(1) 确保已安装所需的软件包：**  
-在继续之前，确保 **Gazebo Ignition Fortress** 和 `jaka_ros2` 包已经正确安装。
+在继续之前，确保 **Gazebo Ignition Fortress**、`ros_gz_bridge` 和 `jaka_ros2` 包已经正确安装。
 
-**(2) 更新自定义启动文件：**  
-将默认的 `launches.py` 文件替换为 `jaka_ros2` 包提供的自定义版本（详情请参阅 [上一个节](#设置-moveit-2-与-jaka-机器人rviz-仿真)）。
+**(2) 构建并加载工作区：**
+按照[上一个节](#设置-moveit-2-与-jaka-机器人rviz-仿真)中的说明构建并加载工作区。
 
 **(3) 仅启动 Gazebo 进行模型可视化：**  
 要在 Gazebo 中可视化 JAKA 机器人模型，使用自定义的 `gazebo.launch.py` 文件运行以下命令：  
@@ -946,7 +942,7 @@ ros2 run jaka_planner moveit_test --ros-args -p model:=<robot_model>
 
 ```bash
 ros2 launch jaka_<robot_model>_moveit_config gazebo.launch.py 
-ros2 run jaka_planner moveit_test --ros-args -p model:=<robot_model>
+ros2 run jaka_planner moveit_test --ros-args -p model:=<robot_model> -p use_sim_time:=true
 ```  
 
 > **注意：** 将 `<robot_model>` 替换为相应的 JAKA 机器人型号。  
@@ -963,7 +959,7 @@ ros2 run jaka_planner moveit_test --ros-args -p model:=<robot_model>
 
 ```bash
 ros2 launch jaka_<robot_model>_moveit_config demo_gazebo.launch.py 
-ros2 run jaka_planner moveit_test --ros-args -p model:=<robot_model>
+ros2 run jaka_planner moveit_test --ros-args -p model:=<robot_model> -p use_sim_time:=true
 ```  
 
 > **注意：** 将 `<robot_model>` 替换为相应的 JAKA 机器人型号。  

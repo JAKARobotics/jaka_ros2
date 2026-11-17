@@ -1,5 +1,5 @@
 from moveit_configs_utils import MoveItConfigsBuilder
-from moveit_configs_utils.launches import generate_gazebo_launch 
+from jaka_moveit_launches.launches import generate_gazebo_launch
 
 
 def generate_launch_description():
