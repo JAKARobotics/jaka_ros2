@@ -15,12 +15,12 @@
       <mass
         value="1.366" />
       <inertia
-        ixx="5.1387"
-        ixy="0.00072433"
-        ixz="0.15847"
-        iyy="9.4601"
-        iyz="-0.048546"
-        izz="11.183" />
+        ixx="0.0051387"
+        ixy="7.2433E-07"
+        ixz="0.00015847"
+        iyy="0.0094601"
+        iyz="-4.8546E-05"
+        izz="0.011183" />
     </inertial>
     <visual>
       <origin
@@ -61,12 +61,12 @@
       <mass
         value="9.321" />
       <inertia
-        ixx="48.471"
-        ixy="-0.01274"
-        ixz="0.045021"
-        iyy="47.812"
-        iyz="0.53242"
-        izz="29.322" />
+        ixx="0.048471"
+        ixy="-1.274E-05"
+        ixz="4.5021E-05"
+        iyy="0.047812"
+        iyz="0.00053242"
+        izz="0.029322" />
     </inertial>
     <visual>
       <origin
@@ -119,12 +119,12 @@
       <mass
         value="17.227" />
       <inertia
-        ixx="635.84"
-        ixy="-0.12418"
-        ixz="-822.93"
-        iyy="3379.7"
-        iyz="0.019691"
-        izz="2797.2" />
+        ixx="0.63584"
+        ixy="-0.00012418"
+        ixz="-0.82293"
+        iyy="3.3797"
+        iyz="1.9691E-05"
+        izz="2.7972" />
     </inertial>
     <visual>
       <origin
@@ -177,12 +177,12 @@
       <mass
         value="5.12" />
       <inertia
-        ixx="20.798"
-        ixy="-0.0078393"
-        ixz="-87.972"
-        iyy="940.93"
-        iyz="-0.031499"
-        izz="928.07" />
+        ixx="0.020798"
+        ixy="-7.8393E-06"
+        ixz="-0.087972"
+        iyy="0.94093"
+        iyz="-3.1499E-05"
+        izz="0.92807" />
     </inertial>
     <visual>
       <origin
@@ -235,12 +235,12 @@
       <mass
         value="2.371" />
       <inertia
-        ixx="6.1112"
-        ixy="0.0023171"
-        ixz="0.00088886"
-        iyy="2.5056"
-        iyz="0.0080603"
-        izz="5.982" />
+        ixx="0.0061112"
+        ixy="2.3171E-06"
+        ixz="8.8886E-07"
+        iyy="0.0025056"
+        iyz="8.0603E-06"
+        izz="0.005982" />
     </inertial>
     <visual>
       <origin
@@ -293,12 +293,12 @@
       <mass
         value="2.416" />
       <inertia
-        ixx="6.3035"
-        ixy="-0.0023526"
-        ixz="-0.00089034"
-        iyy="2.5358"
-        iyz="0.0082096"
-        izz="6.1748" />
+        ixx="0.0063035"
+        ixy="-2.3526E-06"
+        ixz="-8.9034E-07"
+        iyy="0.0025358"
+        iyz="8.2096E-06"
+        izz="0.0061748" />
     </inertial>
     <visual>
       <origin
@@ -351,12 +351,12 @@
       <mass
         value="0.706" />
       <inertia
-        ixx="1.6842"
-        ixy="0.0049316"
-        ixz="0.0073828"
-        iyy="1.6972"
-        iyz="0.0083448"
-        izz="1.276" />
+        ixx="0.0016842"
+        ixy="4.9316E-06"
+        ixz="7.3828E-06"
+        iyy="0.0016972"
+        iyz="8.3448E-06"
+        izz="0.001276" />
     </inertial>
     <visual>
       <origin
@@ -401,75 +401,14 @@
       velocity="3.66" />
   </joint>
 
-  <transmission name="trans_joint_1">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_1">
-            <hardwareInterface>hardware_interface/Positionjoint_ointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_1_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_2">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_2">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_2_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_3">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_3">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_3_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_4">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_4">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_4_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_5">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_5">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_5_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_6">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_6">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_6_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
- 
-    <gazebo>
-        <!-- <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so"> -->
-        <plugin name="ign_ros2_control::IgnitionROS2ControlPlugin" filename="libign_ros2_control-system.so">
-            <ros>
-                <remapping>/clock:=/jaka_zu15/clock</remapping>
-            </ros>
-          <parameters>$(find jaka_zu15_moveit_config)/config/ros2_controllers.yaml</parameters>
-          <robotNamespace>/</robotNamespace>
-        </plugin>
-    </gazebo>
+  <gazebo>
+      <!-- <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so"> -->
+      <plugin name="ign_ros2_control::IgnitionROS2ControlPlugin" filename="libign_ros2_control-system.so">
+          <ros>
+              <remapping>/clock:=/jaka_zu15/clock</remapping>
+          </ros>
+        <parameters>$(find jaka_zu15_moveit_config)/config/ros2_controllers.yaml</parameters>
+        <robotNamespace>/</robotNamespace>
+      </plugin>
+  </gazebo>
 </robot>

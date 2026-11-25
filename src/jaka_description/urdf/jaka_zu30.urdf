@@ -12,17 +12,17 @@
     name="Empty_Link0">
     <inertial>
       <origin
-        xyz="0.0033778 -0.00022265 0.034191"
+        xyz="0.003 0 0.029"
         rpy="0 0 0" />
       <mass
-        value="4.9068" />
+        value="3.542" />
       <inertia
-        ixx="0.019204"
-        ixy="-2.3227E-07"
-        ixz="-0.00011247"
-        iyy="0.018856"
-        iyz="6.6222E-06"
-        izz="0.035003" />
+        ixx="0.02"
+        ixy="0"
+        ixz="0"
+        iyy="0.025"
+        iyz="0"
+        izz="0.037" />
     </inertial>
     <visual>
       <origin
@@ -60,17 +60,17 @@
     name="Empty_Link1">
     <inertial>
       <origin
-        xyz="-8.8598E-07 0.0056159 -0.0066183"
+        xyz="0 0.002 -0.04"
         rpy="0 0 0" />
       <mass
-        value="7.5342" />
+        value="16.443" />
       <inertia
-        ixx="0.055309"
-        ixy="8.6465E-08"
-        ixz="1.4129E-07"
-        iyy="0.053715"
-        iyz="-0.00019613"
-        izz="0.037383" />
+        ixx="0.122"
+        ixy="0"
+        ixz="0"
+        iyy="0.122"
+        iyz="-0.001"
+        izz="0.074" />
     </inertial>
     <visual>
       <origin
@@ -109,26 +109,26 @@
     <axis
       xyz="0 0 1" />
     <limit
-      lower="-6.28"
-      upper="6.28"
-      effort="3000"
-      velocity="2.09" />
+      lower="-6.2832"
+      upper="6.2832"
+      effort="800"
+      velocity="335.1032" />
   </joint>
   <link
     name="Empty_Link2">
     <inertial>
       <origin
-        xyz="0.27137 -2.2132E-07 -0.22936"
+        xyz="0.258 0 -0.201"
         rpy="0 0 0" />
       <mass
-        value="19.903" />
+        value="31.576" />
       <inertia
-        ixx="0.096293"
-        ixy="-2.2596E-06"
-        ixz="0.0085057"
-        iyy="1.3904"
-        iyz="-2.8112E-07"
-        izz="1.3666" />
+        ixx="1.43"
+        ixy="0.001"
+        ixz="-1.659"
+        iyy="6.353"
+        iyz="0"
+        izz="5.049" />
     </inertial>
     <visual>
       <origin
@@ -167,26 +167,26 @@
     <axis
       xyz="0 0 1" />
     <limit
-      lower="-1.48"
-      upper="4.62"
-      effort="9000"
-      velocity="2.09" />
+      lower="-1.4835"
+      upper="4.6251"
+      effort="800"
+      velocity="335.1032" />
   </joint>
   <link
     name="Empty_Link3">
     <inertial>
       <origin
-        xyz="0.25044 -7.5432E-07 -0.05733"
+        xyz="0.343 0 -0.068"
         rpy="0 0 0" />
       <mass
-        value="6.782" />
+        value="6.902" />
       <inertia
-        ixx="0.013304"
-        ixy="-1.1062E-06"
-        ixz="-0.0088098"
-        iyy="0.28438"
-        iyz="-2.6665E-07"
-        izz="0.28253" />
+        ixx="0.05"
+        ixy="-0.001"
+        ixz="-0.172"
+        iyy="1.196"
+        iyz="0"
+        izz="1.161" />
     </inertial>
     <visual>
       <origin
@@ -225,26 +225,26 @@
     <axis
       xyz="0 0 1" />
     <limit
-      lower="-3.05"
-      upper="3.05"
-      effort="9000"
-      velocity="2.09" />
+      lower="-3.0543"
+      upper="3.0543"
+      effort="436"
+      velocity="251.327" />
   </joint>
   <link
     name="Empty_Link4">
     <inertial>
       <origin
-        xyz="-4.9353E-08 -0.0057267 0.0052352"
+        xyz="0.001 -0.032 0.001"
         rpy="0 0 0" />
       <mass
-        value="1.2892" />
+        value="3.092" />
       <inertia
-        ixx="0.0031175"
-        ixy="1.6387E-09"
-        ixz="-4.7004E-09"
-        iyy="0.0019091"
-        iyz="-3.865E-05"
-        izz="0.0029354" />
+        ixx="0.009"
+        ixy="0"
+        ixz="0"
+        iyy="0.004"
+        iyz="0"
+        izz="0.009" />
     </inertial>
     <visual>
       <origin
@@ -283,26 +283,26 @@
     <axis
       xyz="0 0 1" />
     <limit
-      lower="-1.48"
-      upper="4.62"
-      effort="6000"
-      velocity="3.84" />
+      lower="-1.4835"
+      upper="4.6251"
+      effort="102"
+      velocity="387.463" />
   </joint>
   <link
     name="Empty_Link5">
     <inertial>
       <origin
-        xyz="-4.0193E-08 0.0035719 -0.0051183"
+        xyz="0.032 0.05 -0.001"
         rpy="0 0 0" />
       <mass
-        value="1.33" />
+        value="3.092" />
       <inertia
-        ixx="0.003343"
-        ixy="-3.6485E-10"
-        ixz="4.8841E-09"
-        iyy="0.0019534"
-        iyz="-2.4314E-05"
-        izz="0.0031635" />
+        ixx="0.012"
+        ixy="0.005"
+        ixz="0"
+        iyy="0.009"
+        iyz="0"
+        izz="0.017" />
     </inertial>
     <visual>
       <origin
@@ -341,26 +341,26 @@
     <axis
       xyz="0 0 1" />
     <limit
-      lower="-6.28"
-      upper="6.28"
-      effort="6000"
-      velocity="3.84" />
+      lower="-6.2832"
+      upper="6.2832"
+      effort="102"
+      velocity="387.463" />
   </joint>
   <link
     name="Empty_Link6">
     <inertial>
       <origin
-        xyz="-0.00031973 0.00011874 -0.022089"
+        xyz="0 0 -0.017"
         rpy="0 0 0" />
       <mass
-        value="0.31241" />
+        value="0.545" />
       <inertia
-        ixx="0.00024421"
-        ixy="7.2248E-08"
-        ixz="-3.3291E-07"
-        iyy="0.00024881"
-        iyz="2.0087E-07"
-        izz="0.00040651" />
+        ixx="0.001"
+        ixy="0"
+        ixz="0"
+        iyy="0.001"
+        iyz="0"
+        izz="0.001" />
     </inertial>
     <visual>
       <origin
@@ -399,73 +399,12 @@
     <axis
       xyz="0 0 1" />
     <limit
-      lower="-6.28"
-      upper="6.28"
-      effort="2000"
-      velocity="3.84" />
+      lower="-6.2832"
+      upper="6.2832"
+      effort="102"
+      velocity="387.463" />
   </joint>
 
-
-  <transmission name="trans_joint_1">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="joint_1">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="joint_1_motor">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="trans_joint_2">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="joint_2">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="joint_2_motor">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="trans_joint_3">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="joint_3">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="joint_3_motor">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="trans_joint_4">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="joint_4">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="joint_4_motor">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="trans_joint_5">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="joint_5">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="joint_5_motor">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-  <transmission name="trans_joint_6">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="joint_6">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="joint_6_motor">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
   <gazebo>
     <!-- <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so"> -->
     <plugin name="ign_ros2_control::IgnitionROS2ControlPlugin" filename="libign_ros2_control-system.so">

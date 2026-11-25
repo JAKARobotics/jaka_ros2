@@ -406,73 +406,73 @@
   </joint>
 
  <transmission name="trans_joint_1">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_1">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_1_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_2">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_2">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_2_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_3">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_3">    
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_3_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_4">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_4">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_4_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_5">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_5">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_5_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_6">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_6">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_6_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <gazebo>
-        <!-- <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so"> -->
-        <plugin name="ign_ros2_control::IgnitionROS2ControlPlugin" filename="libign_ros2_control-system.so">
-            <ros>
-                <remapping>/clock:=/jaka_c7/clock</remapping>
-            </ros>
-            <parameters>$(find jaka_c7_moveit_config)/config/ros2_controllers.yaml</parameters>
-            <robotNamespace>/</robotNamespace>
-        </plugin>
-    </gazebo>
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="joint_1">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="joint_1_motor">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+  </transmission>
+  <transmission name="trans_joint_2">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="joint_2">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="joint_2_motor">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+  </transmission>
+  <transmission name="trans_joint_3">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="joint_3">    
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="joint_3_motor">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+  </transmission>
+  <transmission name="trans_joint_4">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="joint_4">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="joint_4_motor">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+  </transmission>
+  <transmission name="trans_joint_5">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="joint_5">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="joint_5_motor">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+  </transmission>
+  <transmission name="trans_joint_6">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="joint_6">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="joint_6_motor">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+  </transmission>
+  <gazebo>
+      <!-- <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so"> -->
+      <plugin name="ign_ros2_control::IgnitionROS2ControlPlugin" filename="libign_ros2_control-system.so">
+          <ros>
+              <remapping>/clock:=/jaka_c7/clock</remapping>
+          </ros>
+          <parameters>$(find jaka_c7_moveit_config)/config/ros2_controllers.yaml</parameters>
+          <robotNamespace>/</robotNamespace>
+      </plugin>
+  </gazebo>
 </robot>

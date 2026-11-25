@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
-     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     Commit Version: 1.5.1-0-g916b5db  Build Version: 1.5.7152.31018
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot
   name="jaka_pro5">
@@ -12,17 +12,17 @@
     name="Link_00">
     <inertial>
       <origin
-        xyz="0.0028884 -1.8047E-05 0.019452"
+        xyz="0.00282 -0.00019 0.01954"
         rpy="0 0 0" />
       <mass
-        value="0.59716" />
+        value="0.89" />
       <inertia
-        ixx="0.0008187"
-        ixy="2.3851E-07"
-        ixz="3.8024E-06"
-        iyy="0.0011626"
-        iyz="7.1286E-08"
-        izz="0.0018406" />
+        ixx="0.0010642"
+        ixy="-1.1E-07"
+        ixz="-5.86E-06"
+        iyy="0.0016178"
+        iyz="-4.1E-07"
+        izz="0.0024529" />
     </inertial>
     <visual>
       <origin
@@ -35,7 +35,7 @@
       <material
         name="">
         <color
-          rgba="0.84706 0.84706 0.84706 1" />
+          rgba="0.85882 0.81569 0.72157 1" />
       </material>
     </visual>
     <collision>
@@ -60,17 +60,17 @@
     name="Link_01">
     <inertial>
       <origin
-        xyz="-2.5186E-07 0.0033226 -0.001509"
+        xyz="0 0.00332 -0.00151"
         rpy="0 0 0" />
       <mass
-        value="15.135" />
+        value="4.09" />
       <inertia
-        ixx="0.044302"
-        ixy="1.5349E-07"
-        ixz="-6.1966E-07"
-        iyy="0.043091"
-        iyz="1.4326E-05"
-        izz="0.030523" />
+        ixx="0.011958"
+        ixy="-4E-08"
+        ixz="1.7E-07"
+        iyy="0.011631"
+        iyz="-3.87E-06"
+        izz="0.0082385" />
     </inertial>
     <visual>
       <origin
@@ -83,7 +83,7 @@
       <material
         name="">
         <color
-          rgba="0.84706 0.84706 0.84706 1" />
+          rgba="0.97255 0.96863 1 1" />
       </material>
     </visual>
     <collision>
@@ -118,17 +118,17 @@
     name="Link_02">
     <inertial>
       <origin
-        xyz="0.215 6.4325E-09 -0.14315"
+        xyz="0.215 0 -0.14315"
         rpy="0 0 0" />
       <mass
-        value="45.847" />
+        value="9.7" />
       <inertia
-        ixx="0.10377"
-        ixy="-1.3562E-06"
-        ixz="2.544E-07"
-        iyy="1.5964"
-        iyz="2.1509E-08"
-        izz="1.5689" />
+        ixx="0.021956"
+        ixy="2.9E-07"
+        ixz="-5E-08"
+        iyy="0.33776"
+        iyz="0"
+        izz="0.33193" />
     </inertial>
     <visual>
       <origin
@@ -141,7 +141,7 @@
       <material
         name="">
         <color
-          rgba="0.84706 0.84706 0.84706 1" />
+          rgba="0.97255 0.96863 1 1" />
       </material>
     </visual>
     <collision>
@@ -176,17 +176,17 @@
     name="Link_03">
     <inertial>
       <origin
-        xyz="0.19073 -1.1854E-05 -0.010637"
+        xyz="0.19073 -1E-05 -0.01064"
         rpy="0 0 0" />
       <mass
-        value="18.054" />
+        value="2.9" />
       <inertia
-        ixx="0.022003"
-        ixy="-3.4504E-06"
-        ixz="-0.022449"
-        iyy="0.41579"
-        iyz="1.1408E-08"
-        izz="0.41022" />
+        ixx="0.0035282"
+        ixy="5.5E-07"
+        ixz="0.0035997"
+        iyy="0.066673"
+        iyz="0"
+        izz="0.06578" />
     </inertial>
     <visual>
       <origin
@@ -199,7 +199,7 @@
       <material
         name="">
         <color
-          rgba="0.84706 0.84706 0.84706 1" />
+          rgba="0.97255 0.96863 1 1" />
       </material>
     </visual>
     <collision>
@@ -234,17 +234,17 @@
     name="Link_04">
     <inertial>
       <origin
-        xyz="-2.1463E-06 -0.0059512 0.0026789"
+        xyz="0 -0.00595 0.00268"
         rpy="0 0 0" />
       <mass
-        value="5.5377" />
+        value="1.58" />
       <inertia
-        ixx="0.0092004"
-        ixy="1.17E-07"
-        ixz="-1.3683E-08"
-        iyy="0.0052083"
-        iyz="-8.5741E-05"
-        izz="0.0089125" />
+        ixx="0.0026184"
+        ixy="-3E-08"
+        ixz="0"
+        iyy="0.0014822"
+        iyz="2.44E-05"
+        izz="0.0025364" />
     </inertial>
     <visual>
       <origin
@@ -257,7 +257,7 @@
       <material
         name="">
         <color
-          rgba="0.84706 0.84706 0.84706 1" />
+          rgba="0.97255 0.96863 1 1" />
       </material>
     </visual>
     <collision>
@@ -274,7 +274,7 @@
     name="joint_4"
     type="revolute">
     <origin
-      xyz="0.3685 -1.185E-05 -0.114"
+      xyz="0.3685 0 -0.114"
       rpy="0 0 0" />
     <parent
       link="Link_03" />
@@ -292,17 +292,17 @@
     name="Link_05">
     <inertial>
       <origin
-        xyz="-1.6838E-06 -0.0024332 -0.0023568"
+        xyz="0 -0.00289 -0.00234"
         rpy="0 0 0" />
       <mass
-        value="0.80171" />
+        value="1.6" />
       <inertia
-        ixx="0.0016264"
-        ixy="3.8655E-09"
-        ixz="2.6908E-09"
-        iyy="0.00073912"
-        iyz="4.9488E-06"
-        izz="0.0015891" />
+        ixx="0.0032862"
+        ixy="3E-08"
+        ixz="0"
+        iyy="0.0014785"
+        iyz="-1.149E-05"
+        izz="0.0032121" />
     </inertial>
     <visual>
       <origin
@@ -315,7 +315,7 @@
       <material
         name="">
         <color
-          rgba="1 1 1 1" />
+          rgba="0.97255 0.96863 1 1" />
       </material>
     </visual>
     <collision>
@@ -350,17 +350,17 @@
     name="Link_06">
     <inertial>
       <origin
-        xyz="2.7652E-05 -1.3485E-05 -0.021245"
+        xyz="3E-05 -1E-05 -0.02125"
         rpy="0 0 0" />
       <mass
-        value="1.4169" />
+        value="0.24" />
       <inertia
-        ixx="0.00071853"
-        ixy="-6.9778E-07"
-        ixz="-6.378E-07"
-        iyy="0.00072375"
-        iyz="8.3072E-07"
-        izz="0.0011337" />
+        ixx="0.00012272"
+        ixy="1.2E-07"
+        ixz="1.1E-07"
+        iyy="0.00012361"
+        iyz="-1.4E-07"
+        izz="0.00019362" />
     </inertial>
     <visual>
       <origin
@@ -373,7 +373,7 @@
       <material
         name="">
         <color
-          rgba="0.84706 0.84706 0.84706 1" />
+          rgba="0.25098 0.25098 0.25098 1" />
       </material>
     </visual>
     <collision>
@@ -405,74 +405,13 @@
       velocity="3.14" />
   </joint>
  
-  <transmission name="trans_joint_1">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_1">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_1_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_2">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_2">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_2_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_3">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_3">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_3_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_4">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_4">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_4_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_5">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_5">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_5_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_6">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_6">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_6_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
- 
-    <gazebo>
-        <!-- <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so"> -->
-        <plugin name="ign_ros2_control::IgnitionROS2ControlPlugin" filename="libign_ros2_control-system.so">
-            <ros>
-                <remapping>/clock:=/jaka_pro5/clock</remapping>
-            </ros>
-            <parameters>$(find jaka_pro5_moveit_config)/config/ros2_controllers.yaml</parameters>            <robotNamespace>/</robotNamespace>
-        </plugin>
-    </gazebo>
+  <gazebo>
+      <!-- <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so"> -->
+      <plugin name="ign_ros2_control::IgnitionROS2ControlPlugin" filename="libign_ros2_control-system.so">
+          <ros>
+              <remapping>/clock:=/jaka_pro5/clock</remapping>
+          </ros>
+          <parameters>$(find jaka_pro5_moveit_config)/config/ros2_controllers.yaml</parameters>            <robotNamespace>/</robotNamespace>
+      </plugin>
+  </gazebo>
 </robot>

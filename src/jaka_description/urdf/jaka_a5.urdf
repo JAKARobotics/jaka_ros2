@@ -12,17 +12,17 @@
     name="base_link">
     <inertial>
       <origin
-        xyz="0.0028167 -0.00019454 0.019544"
+        xyz="0.0028141 -0.00019453 0.019545"
         rpy="0 0 0" />
       <mass
-        value="0.52663" />
+        value="0.798" />
       <inertia
-        ixx="0.0006297"
-        ixy="6.7091E-08"
-        ixz="3.4682E-06"
-        iyy="0.00095727"
-        iyz="2.4476E-07"
-        izz="0.0014514" />
+        ixx="0.0012589"
+        ixy="-5.3845E-07"
+        ixz="3.8672E-05"
+        iyy="0.0017616"
+        iyz="-3.405E-06"
+        izz="0.0022056" />
     </inertial>
     <visual>
       <origin
@@ -62,14 +62,14 @@
         xyz="-2.5186E-07 0.0033226 -0.001509"
         rpy="0 0 0" />
       <mass
-        value="15.135" />
+        value="4.15" />
       <inertia
-        ixx="0.044302"
-        ixy="1.5349E-07"
-        ixz="-6.1966E-07"
-        iyy="0.043091"
-        iyz="1.4326E-05"
-        izz="0.030523" />
+        ixx="0.012204"
+        ixy="5.89E-09"
+        ixz="1.1215E-07"
+        iyy="0.011825"
+        iyz="-2.4753E-05"
+        izz="0.0084152" />
     </inertial>
     <visual>
       <origin
@@ -117,17 +117,17 @@
     name="J2">
     <inertial>
       <origin
-        xyz="0.215 4.9016E-09 -0.14314"
+        xyz="0.215 4.902E-09 -0.14314"
         rpy="0 0 0" />
       <mass
-        value="5.7891" />
+        value="9.6608" />
       <inertia
-        ixx="0.013095"
-        ixy="-4.1856E-09"
-        ixz="2.9241E-08"
-        iyy="0.20279"
-        iyz="2.1723E-09"
-        izz="0.19928" />
+        ixx="0.21981"
+        ixy="3.5746E-07"
+        ixz="-0.29732"
+        iyy="0.98296"
+        iyz="-1.04E-08"
+        izz="0.77914" />
     </inertial>
     <visual>
       <origin
@@ -175,17 +175,17 @@
     name="J3">
     <inertial>
       <origin
-        xyz="0.17601 -7.8489E-07 -0.0097984"
+        xyz="0.17601 -1.9288E-06 -0.0097997"
         rpy="0 0 0" />
       <mass
-        value="2.5808" />
+        value="2.5" />
       <inertia
-        ixx="0.0032112"
-        ixy="1.1156E-07"
-        ixz="-0.0022739"
-        iyy="0.05921"
-        iyz="3.3121E-08"
-        izz="0.058511" />
+        ixx="0.0033507"
+        ixy="-4.8737E-07"
+        ixz="-0.0021089"
+        iyy="0.13505"
+        iyz="-3.977E-08"
+        izz="0.13413" />
     </inertial>
     <visual>
       <origin
@@ -233,17 +233,17 @@
     name="J4">
     <inertial>
       <origin
-        xyz="-2.1463E-06 -0.0059512 0.0026789"
+        xyz="-1.9873E-06 -0.0059512 0.0026789"
         rpy="0 0 0" />
       <mass
-        value="5.5377" />
+        value="1.615" />
       <inertia
-        ixx="0.0092004"
-        ixy="1.17E-07"
-        ixz="-1.3683E-08"
-        iyy="0.0052083"
-        iyz="-8.5741E-05"
-        izz="0.0089125" />
+        ixx="0.002752"
+        ixy="-1.346E-08"
+        ixz="-5.31E-09"
+        iyy="0.0015305"
+        iyz="-7.4245E-07"
+        izz="0.0026564" />
     </inertial>
     <visual>
       <origin
@@ -291,17 +291,17 @@
     name="J5">
     <inertial>
       <origin
-        xyz="-2.2875E-08 -0.0015344 -0.0023275"
+        xyz="-7.8691E-07 -0.0015338 -0.0023271"
         rpy="0 0 0" />
       <mass
-        value="0.81207" />
+        value="1.671" />
       <inertia
-        ixx="0.0016825"
-        ixy="2.829E-09"
-        ixz="-1.1984E-08"
-        iyy="0.00074766"
-        iyz="3.2415E-06"
-        izz="0.0016452" />
+        ixx="0.003475"
+        ixy="-5.76E-09"
+        ixz="2.475E-08"
+        iyy="0.0015475"
+        iyz="-7.0258E-07"
+        izz="0.0033893" />
     </inertial>
     <visual>
       <origin
@@ -352,14 +352,14 @@
         xyz="3.1532E-05 -1.4302E-05 -0.02023"
         rpy="0 0 0" />
       <mass
-        value="1.336" />
+        value="0.293" />
       <inertia
-        ixx="0.00066124"
-        ixy="-6.979E-07"
-        ixz="-6.4232E-07"
-        iyy="0.00066646"
-        iyz="8.1119E-07"
-        izz="0.0010673" />
+        ixx="0.000264935"
+        ixy="1.5293E-07"
+        ixz="-4.604E-08"
+        iyy="0.00026608"
+        iyz="-9.313E-08"
+        izz="0.000234075" />
     </inertial>
     <visual>
       <origin
@@ -396,83 +396,23 @@
     <child
       link="J6" />
     <axis
-      xyz="-0.00010901 0 1" />
+      xyz="0 0 1" />
     <limit
       lower="-6.28"
       upper="6.28"
       effort="1000"
       velocity="3.665" />
   </joint>
-
-  <transmission name="trans_joint_1">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_1">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_1_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_2">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_2">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_2_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_3">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_3">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_3_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_4">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_4">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_4_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_5">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_5">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_5_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <transmission name="trans_joint_6">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_6">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="joint_6_motor">
-            <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
-    <gazebo>
-        <!-- <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so"> -->
-        <plugin name="ign_ros2_control::IgnitionROS2ControlPlugin" filename="libign_ros2_control-system.so">
-            <ros>
-                <remapping>/clock:=/jaka_a5/clock</remapping>
-            </ros>
-            <parameters>$(find jaka_a5_moveit_config)/config/ros2_controllers.yaml</parameters>
-            <robotNamespace>/</robotNamespace>
-        </plugin>
-    </gazebo>
+  
+  <gazebo>
+      <!-- <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so"> -->
+      <plugin name="ign_ros2_control::IgnitionROS2ControlPlugin" filename="libign_ros2_control-system.so">
+          <ros>
+              <remapping>/clock:=/jaka_a5/clock</remapping>
+          </ros>
+          <parameters>$(find jaka_a5_moveit_config)/config/ros2_controllers.yaml</parameters>
+          <robotNamespace>/</robotNamespace>
+      </plugin>
+  </gazebo>
 
 </robot>

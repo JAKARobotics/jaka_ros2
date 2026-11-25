@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.5.1-0-g916b5db  Build Version: 1.5.7152.31018
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="jaka_zu50">
+  <!-- LINK -->
+  <link name="world" />
+  <link
+    name="joint-00">
+    <inertial>
+      <origin
+        xyz="0.002 0 0.047"
+        rpy="0 0 0" />
+      <mass
+        value="9.432" />
+      <inertia
+        ixx="0.09"
+        ixy="0"
+        ixz="-0.001"
+        iyy="0.095"
+        iyz="0"
+        izz="0.164" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://jaka_description/meshes/jaka_zu50_meshes/joint-00.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://jaka_description/meshes/jaka_zu50_meshes/joint-00.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <!-- JOINT -->
+  <joint name="fixed" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+     <parent link="world"/>
+     <child link="joint-00"/>
+  </joint>
+  <link
+    name="joint-01">
+    <inertial>
+      <origin
+        xyz="0 0.012 -0.059"
+        rpy="0 0 0" />
+      <mass
+        value="41.449" />
+      <inertia
+        ixx="0.423"
+        ixy="0"
+        ixz="0"
+        iyy="0.412"
+        iyz="0.038"
+        izz="0.4" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://jaka_description/meshes/jaka_zu50_meshes/joint-01.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://jaka_description/meshes/jaka_zu50_meshes/joint-01.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="joint_1"
+    type="revolute">
+    <origin
+      xyz="0 0 0.3035"
+      rpy="0 0 0" />
+    <parent
+      link="joint-00" />
+    <child
+      link="joint-01" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-6.2831"
+      upper="6.2831"
+      effort="2124"
+      velocity="1.92" />
+  </joint>
+  <link
+    name="joint-02">
+    <inertial>
+      <origin
+        xyz="0.434 0 -0.293"
+        rpy="0 0 0" />
+      <mass
+        value="82.443" />
+      <inertia
+        ixx="0.761"
+        ixy="-0.001"
+        ixz="-0.14"
+        iyy="19.42"
+        iyz="0"
+        izz="19.356" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://jaka_description/meshes/jaka_zu50_meshes/joint-02.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://jaka_description/meshes/jaka_zu50_meshes/joint-02.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="joint_2"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="1.5708 0 0" />
+    <parent
+      link="joint-01" />
+    <child
+      link="joint-02" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1.4835"
+      upper="4.625"
+      effort="2124"
+      velocity="1.9199" />
+  </joint>
+  <link
+    name="joint-03">
+    <inertial>
+      <origin
+        xyz="0.466 0 -0.076"
+        rpy="0 0 0" />
+      <mass
+        value="13.999" />
+      <inertia
+        ixx="0.066"
+        ixy="0"
+        ixz="0.017"
+        iyy="1.736"
+        iyz="0"
+        izz="1.732" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://jaka_description/meshes/jaka_zu50_meshes/joint-03.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://jaka_description/meshes/jaka_zu50_meshes/joint-03.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="joint_3"
+    type="revolute">
+    <origin
+      xyz="1.066 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="joint-02" />
+    <child
+      link="joint-03" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-3.0543"
+      upper="3.0543"
+      effort="1334"
+      velocity="2.1817" />
+  </joint>
+  <link
+    name="joint-04">
+    <inertial>
+      <origin
+        xyz="0 -0.0027 0.004"
+        rpy="0 0 0" />
+      <mass
+        value="5.327" />
+      <inertia
+        ixx="0.023"
+        ixy="0"
+        ixz="0"
+        iyy="0.015"
+        iyz="0.001"
+        izz="0.022" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://jaka_description/meshes/jaka_zu50_meshes/joint-04.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://jaka_description/meshes/jaka_zu50_meshes/joint-04.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="joint_4"
+    type="revolute">
+    <origin
+      xyz="0.852 0 -0.2345"
+      rpy="0 0 0" />
+    <parent
+      link="joint-03" />
+    <child
+      link="joint-04" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1.4835"
+      upper="4.6251"
+      effort="194"
+      velocity="3.6652" />
+  </joint>
+  <link
+    name="joint-05">
+    <inertial>
+      <origin
+        xyz="0 0.026 -0.004"
+        rpy="0 0 0" />
+      <mass
+        value="5.327" />
+      <inertia
+        ixx="0.023"
+        ixy="0"
+        ixz="0"
+        iyy="0.015"
+        iyz="0.001"
+        izz="0.022" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://jaka_description/meshes/jaka_zu50_meshes/joint-05.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://jaka_description/meshes/jaka_zu50_meshes/joint-05.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="joint_5"
+    type="revolute">
+    <origin
+      xyz="0 -0.182 0"
+      rpy="1.5708 0 0" />
+    <parent
+      link="joint-04" />
+    <child
+      link="joint-05" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-6.2832"
+      upper="6.2832"
+      effort="194"
+      velocity="3.6652" />
+  </joint>
+  <link
+    name="joint-06">
+    <inertial>
+      <origin
+        xyz="0 0 -0.025"
+        rpy="0 0 0" />
+      <mass
+        value="1.221" />
+      <inertia
+        ixx="0.002"
+        ixy="0"
+        ixz="0"
+        iyy="0.002"
+        iyz="0"
+        izz="0.003" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://jaka_description/meshes/jaka_zu50_meshes/joint-06.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://jaka_description/meshes/jaka_zu50_meshes/joint-06.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="joint_6"
+    type="revolute">
+    <origin
+      xyz="0 0.165 0"
+      rpy="-1.5708 0 0" />
+    <parent
+      link="joint-05" />
+    <child
+      link="joint-06" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-6.2832"
+      upper="6.2832"
+      effort="194"
+      velocity="3.6652" />
+  </joint>
+  
+  <gazebo>
+    <plugin name="ign_ros2_control::IgnitionROS2ControlPlugin" filename="libign_ros2_control-system.so">
+      <ros>
+        <remapping>/clock:=/jaka_zu50/clock</remapping>
+      </ros>
+      <parameters>$(find jaka_zu50_moveit_config)/config/ros2_controllers.yaml</parameters>
+      <robotNamespace>/</robotNamespace>
+    </plugin>
+  </gazebo>
+</robot>
